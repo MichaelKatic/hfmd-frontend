@@ -1,0 +1,500 @@
+{
+    "data": {
+        "id": 2,
+        "attributes": {
+            "Title": "Frank Goes to Minefaire",
+            "Body": {
+                "time": 1669253611425,
+                "blocks": [
+                    {
+                        "id": "_5dCj-tw0B",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "Hi everybody! We’re back with Frank updates! Frank from Earth is looking more and more like a real game everyday now, and our team couldn’t be prouder. Also, I couldn't be prouder of our team. They've been at it for over 2 years now and I think it shows. Not to get all mushy, but I really don't know what I would do without them.&nbsp;"
+                        }
+                    },
+                    {
+                        "id": "WfBSxQFmlz",
+                        "type": "image",
+                        "data": {
+                            "file": {
+                                "id": 1,
+                                "name": "image.png",
+                                "alternativeText": null,
+                                "caption": null,
+                                "width": 864,
+                                "height": 576,
+                                "formats": {
+                                    "small": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/small_image_aae1a432a0.png",
+                                        "hash": "small_image_aae1a432a0",
+                                        "mime": "image/png",
+                                        "name": "small_image.png",
+                                        "path": null,
+                                        "size": 265.83,
+                                        "width": 500,
+                                        "height": 333
+                                    },
+                                    "medium": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/medium_image_aae1a432a0.png",
+                                        "hash": "medium_image_aae1a432a0",
+                                        "mime": "image/png",
+                                        "name": "medium_image.png",
+                                        "path": null,
+                                        "size": 535.25,
+                                        "width": 750,
+                                        "height": 500
+                                    },
+                                    "thumbnail": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/thumbnail_image_aae1a432a0.png",
+                                        "hash": "thumbnail_image_aae1a432a0",
+                                        "mime": "image/png",
+                                        "name": "thumbnail_image.png",
+                                        "path": null,
+                                        "size": 74.13,
+                                        "width": 234,
+                                        "height": 156
+                                    }
+                                },
+                                "hash": "image_aae1a432a0",
+                                "ext": ".png",
+                                "mime": "image/png",
+                                "size": 422.76,
+                                "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/image_aae1a432a0.png",
+                                "previewUrl": null,
+                                "provider": "aws-s3",
+                                "provider_metadata": null,
+                                "folderPath": "/",
+                                "createdAt": "2022-11-24T01:12:16.524Z",
+                                "updatedAt": "2022-11-24T01:12:16.524Z"
+                            },
+                            "caption": "",
+                            "withBorder": false,
+                            "stretched": false,
+                            "withBackground": false
+                        }
+                    },
+                    {
+                        "id": "DpqVz9_6f7",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "We just got back from our third convention where we shared our latest Frank updates to the lovely people at&nbsp;Minefaire. Now we want to share with you too! First, story time!&nbsp; &nbsp;"
+                        }
+                    },
+                    {
+                        "id": "oOHUfKHAKK",
+                        "type": "header",
+                        "data": {
+                            "text": "Story Time",
+                            "level": 2
+                        }
+                    },
+                    {
+                        "id": "HHEuEgYdsx",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "Liz recently moved to LA and has been going to a local game dev meetup. Steve Isaacs reached out to the group offering free space at Minefaire to come and share indie games. This was an amazing opportunity for us. It’s usually very expensive to go to a convention. At&nbsp;<a href=\"http://tinyphx.com/blog/franks-first-peek\">Phoenix Comicon</a>&nbsp;and&nbsp;<a href=\"http://tinyphx.com/blog/fest-and-back\">Fanfest</a>, on top of regular booth fees we also had to dish out an extra $200 bones for access to power. The total costs for Minefaire included only gas and extra stickers. As an added bonus, one of my besties, Joby &lt;3, lives right by the convention center and said we could crash at his place. My girlfriend, Alex, and I packed up the car and headed for the coast. Ok… I packed up the car while she laughed and said it would never work, but my Tetris skills prevailed!"
+                        }
+                    },
+                    {
+                        "id": "sacAqDs1Vs",
+                        "type": "image",
+                        "data": {
+                            "file": {
+                                "id": 2,
+                                "name": "image.png",
+                                "alternativeText": null,
+                                "caption": null,
+                                "width": 864,
+                                "height": 576,
+                                "formats": {
+                                    "small": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/small_image_1fa1845dcd.png",
+                                        "hash": "small_image_1fa1845dcd",
+                                        "mime": "image/png",
+                                        "name": "small_image.png",
+                                        "path": null,
+                                        "size": 435.19,
+                                        "width": 500,
+                                        "height": 333
+                                    },
+                                    "medium": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/medium_image_1fa1845dcd.png",
+                                        "hash": "medium_image_1fa1845dcd",
+                                        "mime": "image/png",
+                                        "name": "medium_image.png",
+                                        "path": null,
+                                        "size": 952.38,
+                                        "width": 750,
+                                        "height": 500
+                                    },
+                                    "thumbnail": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/thumbnail_image_1fa1845dcd.png",
+                                        "hash": "thumbnail_image_1fa1845dcd",
+                                        "mime": "image/png",
+                                        "name": "thumbnail_image.png",
+                                        "path": null,
+                                        "size": 103.67,
+                                        "width": 234,
+                                        "height": 156
+                                    }
+                                },
+                                "hash": "image_1fa1845dcd",
+                                "ext": ".png",
+                                "mime": "image/png",
+                                "size": 901.36,
+                                "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/image_1fa1845dcd.png",
+                                "previewUrl": null,
+                                "provider": "aws-s3",
+                                "provider_metadata": null,
+                                "folderPath": "/",
+                                "createdAt": "2022-11-24T01:13:03.794Z",
+                                "updatedAt": "2022-11-24T01:13:03.794Z"
+                            },
+                            "caption": "",
+                            "withBorder": false,
+                            "stretched": false,
+                            "withBackground": false
+                        }
+                    },
+                    {
+                        "id": "UT8bVG3xcF",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "In preparation for Minefaire we wanted to do something special, so we made a tribute skin and accessory that everyone was ecstatic to see. We also threw a temporary replacement for Frank’s sword into the game."
+                        }
+                    },
+                    {
+                        "id": "82bM7PS0y5",
+                        "type": "image",
+                        "data": {
+                            "file": {
+                                "id": 3,
+                                "name": "image.png",
+                                "alternativeText": null,
+                                "caption": null,
+                                "width": 864,
+                                "height": 576,
+                                "formats": {
+                                    "small": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/small_image_9f90370fd7.png",
+                                        "hash": "small_image_9f90370fd7",
+                                        "mime": "image/png",
+                                        "name": "small_image.png",
+                                        "path": null,
+                                        "size": 416.9,
+                                        "width": 500,
+                                        "height": 333
+                                    },
+                                    "medium": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/medium_image_9f90370fd7.png",
+                                        "hash": "medium_image_9f90370fd7",
+                                        "mime": "image/png",
+                                        "name": "medium_image.png",
+                                        "path": null,
+                                        "size": 896.52,
+                                        "width": 750,
+                                        "height": 500
+                                    },
+                                    "thumbnail": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/thumbnail_image_9f90370fd7.png",
+                                        "hash": "thumbnail_image_9f90370fd7",
+                                        "mime": "image/png",
+                                        "name": "thumbnail_image.png",
+                                        "path": null,
+                                        "size": 94.57,
+                                        "width": 234,
+                                        "height": 156
+                                    }
+                                },
+                                "hash": "image_9f90370fd7",
+                                "ext": ".png",
+                                "mime": "image/png",
+                                "size": 868.44,
+                                "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/image_9f90370fd7.png",
+                                "previewUrl": null,
+                                "provider": "aws-s3",
+                                "provider_metadata": null,
+                                "folderPath": "/",
+                                "createdAt": "2022-11-24T01:13:20.190Z",
+                                "updatedAt": "2022-11-24T01:13:20.190Z"
+                            },
+                            "caption": "",
+                            "withBorder": false,
+                            "stretched": false,
+                            "withBackground": false
+                        }
+                    },
+                    {
+                        "id": "036hSyexyw",
+                        "type": "header",
+                        "data": {
+                            "text": "Updates",
+                            "level": 2
+                        }
+                    },
+                    {
+                        "id": "eiGFEL-Fgh",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "Other updates we have to share are:&nbsp;"
+                        }
+                    },
+                    {
+                        "id": "b5jc6run-b",
+                        "type": "list",
+                        "data": {
+                            "style": "unordered",
+                            "items": [
+                                "Breakfast World",
+                                "Frank Voices - Compliments of the lovely, Abel James",
+                                "Space Backgrounds",
+                                "An Android Version!"
+                            ]
+                        }
+                    },
+                    {
+                        "id": "4vZ8yDd3Io",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "​Here’s a matrix style 360 view that took me way too long to make:"
+                        }
+                    },
+                    {
+                        "id": "SbWkSFOGxF",
+                        "type": "embed",
+                        "data": {
+                            "service": "gfycat",
+                            "source": "https://gfycat.com/frigidharmlessbedbug",
+                            "embed": "https://gfycat.com/ifr/frigidharmlessbedbug",
+                            "width": 580,
+                            "height": 436,
+                            "caption": ""
+                        }
+                    },
+                    {
+                        "id": "Co0Oh-IJFp",
+                        "type": "header",
+                        "data": {
+                            "text": "Setup",
+                            "level": 2
+                        }
+                    },
+                    {
+                        "id": "m4Vlq5R8dr",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "When we got to the convention, we had a small setup but were able to make it work. In the background you can see them testing the big screen by playing Mincraft! We set up right next to code spark which was great for the unlimited questions I get about how to get kids started coding. All I had to do was point right next door. After a few test plays we we’re ready for another successful, and bug FREE, convention!"
+                        }
+                    },
+                    {
+                        "id": "9MDYWicgJz",
+                        "type": "header",
+                        "data": {
+                            "text": "Day 1",
+                            "level": 2
+                        }
+                    },
+                    {
+                        "id": "c12l_YmtwS",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "Turns out I was right and the bugs were running free throughout the game! Because we all work part time and remotely, it is hard to make sure multiplayer is bug free. The conventions are a great tool to find these bugs, but the players become our guinea pigs and if I said no one was hurt in the attending of this conference I would be lying. One bug we ran into caused players to permanently drop their guns. One of the kids who had this happen was frantic! When his mom said it was time to leave he burst out a cry saying, “I’M TRYING TO FIND A GUN!” Dragged away kicking and screaming I couldn’t help but feel responsible :("
+                        }
+                    },
+                    {
+                        "id": "7dnh24LOgi",
+                        "type": "header",
+                        "data": {
+                            "text": "Day 2",
+                            "level": 2
+                        }
+                    },
+                    {
+                        "id": "KWMktVweUI",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "After a long night of bug fixing, we had a much smoother day two with zero crying. At one point I did hear someone yell, “KILL THE BASTARDS” but it was in good spirits. Apparently, our light-hearted game can really bring out the evil in children. Don’t take my word for it though…"
+                        }
+                    },
+                    {
+                        "id": "ZI0VxhRqdc",
+                        "type": "embed",
+                        "data": {
+                            "service": "gfycat",
+                            "source": "https://gfycat.com/evengrimydungbeetle",
+                            "embed": "https://gfycat.com/ifr/evengrimydungbeetle",
+                            "width": 580,
+                            "height": 436,
+                            "caption": ""
+                        }
+                    },
+                    {
+                        "id": "gCroCz8VSG",
+                        "type": "header",
+                        "data": {
+                            "text": "Overall Response",
+                            "level": 2
+                        }
+                    },
+                    {
+                        "id": "phWTAHEra1",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "Overall the response was amazing. This convention had a higher population of kids than we’ve seen before. It’s hard to say if kids like the game more or are just less shy to come sit down and play a game. Kids also don’t care how long they play. These kids played forever:"
+                        }
+                    },
+                    {
+                        "id": "-TbQBSjmTn",
+                        "type": "image",
+                        "data": {
+                            "file": {
+                                "id": 4,
+                                "name": "image.png",
+                                "alternativeText": null,
+                                "caption": null,
+                                "width": 864,
+                                "height": 576,
+                                "formats": {
+                                    "small": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/small_image_02a6d22272.png",
+                                        "hash": "small_image_02a6d22272",
+                                        "mime": "image/png",
+                                        "name": "small_image.png",
+                                        "path": null,
+                                        "size": 481.71,
+                                        "width": 500,
+                                        "height": 333
+                                    },
+                                    "medium": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/medium_image_02a6d22272.png",
+                                        "hash": "medium_image_02a6d22272",
+                                        "mime": "image/png",
+                                        "name": "medium_image.png",
+                                        "path": null,
+                                        "size": 1061.18,
+                                        "width": 750,
+                                        "height": 500
+                                    },
+                                    "thumbnail": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/thumbnail_image_02a6d22272.png",
+                                        "hash": "thumbnail_image_02a6d22272",
+                                        "mime": "image/png",
+                                        "name": "thumbnail_image.png",
+                                        "path": null,
+                                        "size": 110.48,
+                                        "width": 234,
+                                        "height": 156
+                                    }
+                                },
+                                "hash": "image_02a6d22272",
+                                "ext": ".png",
+                                "mime": "image/png",
+                                "size": 984.96,
+                                "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/image_02a6d22272.png",
+                                "previewUrl": null,
+                                "provider": "aws-s3",
+                                "provider_metadata": null,
+                                "folderPath": "/",
+                                "createdAt": "2022-11-24T01:15:02.245Z",
+                                "updatedAt": "2022-11-24T01:15:02.245Z"
+                            },
+                            "caption": "",
+                            "withBorder": false,
+                            "stretched": false,
+                            "withBackground": false
+                        }
+                    },
+                    {
+                        "id": "xUG1j8iFpx",
+                        "type": "paragraph",
+                        "data": {
+                            "text": "But in all seriousness, I had to constantly kick kids off the game so people who we’re waiting could play."
+                        }
+                    },
+                    {
+                        "id": "sZ6JvnRDZZ",
+                        "type": "image",
+                        "data": {
+                            "file": {
+                                "id": 5,
+                                "name": "image.png",
+                                "alternativeText": null,
+                                "caption": null,
+                                "width": 864,
+                                "height": 576,
+                                "formats": {
+                                    "small": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/small_image_eae19851ad.png",
+                                        "hash": "small_image_eae19851ad",
+                                        "mime": "image/png",
+                                        "name": "small_image.png",
+                                        "path": null,
+                                        "size": 424.59,
+                                        "width": 500,
+                                        "height": 333
+                                    },
+                                    "medium": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/medium_image_eae19851ad.png",
+                                        "hash": "medium_image_eae19851ad",
+                                        "mime": "image/png",
+                                        "name": "medium_image.png",
+                                        "path": null,
+                                        "size": 934.49,
+                                        "width": 750,
+                                        "height": 500
+                                    },
+                                    "thumbnail": {
+                                        "ext": ".png",
+                                        "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/thumbnail_image_eae19851ad.png",
+                                        "hash": "thumbnail_image_eae19851ad",
+                                        "mime": "image/png",
+                                        "name": "thumbnail_image.png",
+                                        "path": null,
+                                        "size": 97.96,
+                                        "width": 234,
+                                        "height": 156
+                                    }
+                                },
+                                "hash": "image_eae19851ad",
+                                "ext": ".png",
+                                "mime": "image/png",
+                                "size": 865.16,
+                                "url": "https://hfmd-strapi-prod.s3.us-west-2.amazonaws.com/image_eae19851ad.png",
+                                "previewUrl": null,
+                                "provider": "aws-s3",
+                                "provider_metadata": null,
+                                "folderPath": "/",
+                                "createdAt": "2022-11-24T01:15:11.025Z",
+                                "updatedAt": "2022-11-24T01:15:11.025Z"
+                            },
+                            "caption": "",
+                            "withBorder": false,
+                            "stretched": false,
+                            "withBackground": false
+                        }
+                    }
+                ],
+                "version": "2.23.2"
+            },
+            "createdAt": "2022-11-24T01:15:38.469Z",
+            "updatedAt": "2022-11-24T01:33:46.881Z",
+            "publishedAt": "2022-11-24T01:23:26.802Z"
+        }
+    },
+    "meta": {}
+}
