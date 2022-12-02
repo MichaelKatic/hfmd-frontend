@@ -69,14 +69,18 @@ const headderStyles = [
     // 'font-family: lust, serif;',
     // 'font-family: temeraire, serif; font-weight: 900; font-style: normal;',
     // 'font-family: miller-headline, serif; font-weight: 700; font-style: normal;',
-    'font-family: miller-headline, serif; font-weight: 600; font-style: normal;',
+    
+'font-family: miller-headline, serif; font-weight: 600; font-style: normal; font-size: 42px;',
     'font-family: abril-text, serif; font-weight: 600; font-style: normal;',
     'font-family: korolev, sans-serif; font-weight: 500; font-style: normal;',
     'font-family: korolev, sans-serif; font-weight: 400; font-style: normal;',
     'font-family: korolev, sans-serif; font-weight: 300; font-style: normal;',
     'font-family: korolev, sans-serif; font-weight: 200; font-style: normal;',
 ]
-const paragraphStyle = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 300; font-style: normal;'
+
+const paragraphStyle = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 400; font-style: normal; letter-spacing: .12px; color: #231f20; font-size: 17px; line-height: 25px;'
+// const paragraphStyle = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 300; font-style: normal;'
+// const paragraphStyle = 'font-family: open-sans, sans-serif; font-weight: 300; font-style: normal;'
 const firstLetterStylye = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 700; font-style: normal;'
 
 const imageSize = {
@@ -92,25 +96,41 @@ const templateHtmlHead = ({Title}) => `
     <head>
         <title>${Title}</title>
         <style>
-            /* 
-            html * {
-                font-family: "Times New Roman", Times, serif;
+            .intro::first-letter {
+                font-family: le-monde-livre-classic-byol, serif; font-weight: 700; font-style: normal;
+                color: hsl(350, 50%, 50%);
+                font-size: 4rem;
+                float: left;
+                line-height: .7;
+                margin: 2px 2px 0 0;
+                color: DarkSlateGrey;
             }
-            $font-size: 1.15rem;
-            $cap-size: $font-size * 6.25;
-            */
 
-            /* @supports (not(initial-letter: 5)) and (not(-webkit-initial-letter: 5)) { */
-                .intro::first-letter {
-                    font-family: le-monde-livre-classic-byol, serif; font-weight: 700; font-style: normal;
-                    color: hsl(350, 50%, 50%);
-                    font-size: 4rem;
-                    float: left;
-                    line-height: .7;
-                    margin: 2px 2px 0 0;
-                    color: DarkSlateGrey;
-                }
-            /*}*/
+            h1 a, h1 a:link, h1 a:visited, h1 a:focus, h1 a:active,
+            h2 a, h2 a:link, h2 a:visited, h2 a:focus, h2 a:active {
+                color: DarkSlateGray;
+                text-decoration: none; 
+            }
+            h1 a:hover,
+            h2 a:hover {
+                color: green;
+                text-decoration: none; 
+            }
+            
+            p a, p a:link, p a:visited, p a:focus, p a:active {
+                color: #026eea;
+                text-decoration: underline; 
+                background-image: url(https://xd.adobe.com/ideas/wp-content/uploads/2019/10/hover-blue-7.png);
+                background-position: 0 12px;
+                background-repeat: repeat-x;
+                text-decoration: none;
+            }
+
+            p a:hover {
+                color: #026eea;
+                text-decoration: none;
+            }
+
         </style>
         <link rel="stylesheet" href="https://use.typekit.net/whq2zsc.css"> <!--fonts from adobe-->
     </head>
@@ -118,11 +138,11 @@ const templateHtmlHead = ({Title}) => `
 
 const templateModelIndex = ({model, data}) => 
     data.map(item => 
-        `<h2><a href="./${model}/${item.id}" target="_self">${item.attributes.Title}</a></h2>`
+        `<h2 style="${headderStyles[1]}"><a href="./${model}/${item.id}" target="_self">${item.attributes.Title}</a></h2>`
     ).join('')
 
 const templateSlug = ({id='', model, Title}) => `<h1 id="${id}" style="${headderStyles[0]}"><a href="../${model}" target="_self">${model}</a> • ${Title}</h1>`
-const templateTitle = ({id='', Title}) => `<h1 id="${id}" style="${headderStyles[0]}">${Title}</h1>`
+const templateTitle = ({id, Title}) => `<h1 ${ id ? `id="${id}"` : ''} style="${headderStyles[0]}">${Title}</h1>`
 
 const templateParagraph = ({id, type, data}) => `
     <p 
@@ -169,7 +189,7 @@ const templateLink = ({id, type, data}) => `
     <table id="${id}" type="${type}" style="${linkTableStyle}">
         <tr> 
             <td>
-                <h3><a href="${data.link}" target="_blank">${data.meta.title}</a></h3>
+                <h3 style="${headderStyles[2]}"><a href="${data.link}" target="_blank">${data.meta.title}</a></h3>
                 <p>${data.meta.description}</p>
             </td>
             <td>
