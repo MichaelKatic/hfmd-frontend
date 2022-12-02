@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv'
-import { get } from 'https'
+import https from 'https'
 import express from 'express'
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
@@ -58,30 +58,37 @@ const parseEditorJsBody = (body) => {
     return JSON.parse(body)
 }
 
-const imageStyle = 'width: 100%; max-width:1000px; object-fit: contain; display: block; margin-left: auto; margin-right: auto;'
+const imageStyle = 'width: 100%; object-fit: contain; display: block; margin-left: auto; margin-right: auto;'
 const delimiterStyle = "height: 2px; border-width: 0; color: gray; background-color: gray;"
-const tableStyle = 'width: 100%; max-width:1000px; border:1px solid black;'
+const tableStyle = 'width: 100%; border:1px solid black;'
 const tableRowStyle = 'border:1px solid black;'
 const tableDataStyle = 'border:1px solid black;'
-const linkTableStyle = 'width: 100%; max-width:1000px; border:1px solid black;'
+const linkTableStyle = 'width: 100%; border:1px solid black;'
 const linkImageStyle = 'height: 125px;'
+
 const headderStyles = [
     // 'font-family: lust, serif;',
     // 'font-family: temeraire, serif; font-weight: 900; font-style: normal;',
     // 'font-family: miller-headline, serif; font-weight: 700; font-style: normal;',
-    
-'font-family: miller-headline, serif; font-weight: 600; font-style: normal; font-size: 42px;',
+    'font-family: miller-headline, serif; font-weight: 600; font-style: normal; font-size: 42px;',
     'font-family: abril-text, serif; font-weight: 600; font-style: normal;',
     'font-family: korolev, sans-serif; font-weight: 500; font-style: normal;',
     'font-family: korolev, sans-serif; font-weight: 400; font-style: normal;',
     'font-family: korolev, sans-serif; font-weight: 300; font-style: normal;',
     'font-family: korolev, sans-serif; font-weight: 200; font-style: normal;',
 ]
-
-const paragraphStyle = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 400; font-style: normal; letter-spacing: .12px; color: #231f20; font-size: 17px; line-height: 25px;'
+const paragraphStyle = 'text-align:justify; font-family: le-monde-livre-classic-byol, serif; font-weight: 400; font-style: normal; letter-spacing: .12px; color: #231f20; font-size: 17px; line-height: 25px;'
 // const paragraphStyle = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 300; font-style: normal;'
 // const paragraphStyle = 'font-family: open-sans, sans-serif; font-weight: 300; font-style: normal;'
 const firstLetterStylye = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 700; font-style: normal;'
+const wrapperStyle = () => `
+    width: 95%; 
+    ${!isMobile ? 'max-width: 600px;' : ''}
+    object-fit: contain; 
+    display: block; 
+    margin: 0 auto; 
+    padding: 20px 0;
+`
 
 const imageSize = {
     large: 'large',
@@ -130,12 +137,13 @@ const templateHtmlHead = ({Title}) => `
                 color: #026eea;
                 text-decoration: none;
             }
-
         </style>
         <link rel="stylesheet" href="https://use.typekit.net/whq2zsc.css"> <!--fonts from adobe-->
     </head>
 `
-
+const templateWrapperBody = ({content}) => `
+    <div style="${wrapperStyle()}">${content}</div>
+`
 const templateModelIndex = ({model, data}) => 
     data.map(item => 
         `<h2 style="${headderStyles[1]}"><a href="./${model}/${item.id}" target="_self">${item.attributes.Title}</a></h2>`
@@ -173,7 +181,7 @@ const templateTable = ({id, type, data}) => `
     <table id="${id}" type="${type}" style="${tableStyle}">
         ${
             data.content.reduce((trAcc, trCur, i) => {
-                tag = data.withHeadings && i == 0 ? 'th' : 'td'
+                const tag = data.withHeadings && i == 0 ? 'th' : 'td'
                 return trAcc + `
                     <tr style="${tableRowStyle}">
                         ${trCur.reduce((tdAcc, tdCur) => tdAcc + `<${tag} style="${tableDataStyle}">${tdCur}</${tag}>`, '')}
@@ -256,8 +264,14 @@ const renderEditorJs = (blocks) => {
 }
 
 const allowedModels = ['blogs']
+let isMobile = false
+const setIsMobile = (userAgent) => {
+    isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+}
 
-
+const serverError = (error, res) => {
+    res.status(500).send(error.status + " " + error.message) //TODO user friendly errors
+}
 
 app.get('/:model', function (req, res) {
     const model = req.params.model
@@ -268,6 +282,8 @@ app.get('/:model', function (req, res) {
         return
     }
 
+    setIsMobile(req.get('user-agent'))
+
     const fields = encodeURIComponent(['id','Title'].join(', '))
 
     getHelper(`https://cms.homeformydome.com/api/${model}?fields=${fields}`).then(
@@ -276,9 +292,10 @@ app.get('/:model', function (req, res) {
             const titleHtml = templateTitle({Title: model})
             const data = response.data;
             const modelIndexHtml = templateModelIndex({model, data})
-            res.send(headHtml + titleHtml + modelIndexHtml)
+            const wrappedBodyHtml = templateWrapperBody({content: titleHtml + modelIndexHtml})
+            res.send(headHtml + wrappedBodyHtml)
         },
-        error => res.status(error.status).send(error.message)
+        error => serverError(error, res)
     )
 })
 
@@ -292,6 +309,8 @@ app.get('/:model/:id', function (req, res) {
         return
     }
 
+    setIsMobile(req.get('user-agent'))
+
     getHelper(`https://cms.homeformydome.com/api/${model}/${id}`).then(
         response => {
             const headHtml = templateHtmlHead({Title: response.data.attributes.Title});
@@ -302,9 +321,10 @@ app.get('/:model/:id', function (req, res) {
             })
             const editorJsBody = parseEditorJsBody(response.data.attributes.Body)
             const bodyHtml = renderEditorJs(editorJsBody.blocks)
-            res.send(headHtml + titleHtml + bodyHtml)
+            const wrappedBodyHtml = templateWrapperBody({content: titleHtml + bodyHtml})
+            res.send(headHtml + wrappedBodyHtml)
         },
-        error => res.status(error.status).send(error.message)
+        error => serverError(error, res)
     )
 })
 
@@ -323,7 +343,7 @@ app.get('/:model/:id/raw', function (req, res) {
             response.data.attributes.Body = parseEditorJsBody(response.data.attributes.Body)
             res.send(response)
         },
-        error => res.status(error.status).send(error.message)
+        error => serverError(error, res)
     )
 })
 
