@@ -7,11 +7,10 @@
             "type": "node-terminal"
         },
         {
-            "name": "Run Node Server",
-            "program": "${workspaceFolder}/app.js",
+            "name": "Start",
+            "command": "npm run start",
             "request": "launch",
-            "skipFiles": [ "<node_internals>/**" ],
-            "type": "node"
+            "type": "node-terminal"
         },
     ]
 }
