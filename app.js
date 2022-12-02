@@ -161,7 +161,11 @@ const templateParagraph = ({id, type, data}) => `
     >
         ${data.text}
     </p>`
-const templateHeader = ({id, type, data}) => `<h${data.level} id="${id}" type="${type}" style="${headderStyles[data.level - 1]}">${data.text}</h${data.level}>`
+const templateHeader = ({id, type, data}) => `
+    <h${data.level} id="${data.text}" type="${type}" style="${headderStyles[data.level - 1]}">
+        <a href="#${data.text}" target="_self">${data.text}</a>
+    </h${data.level}>
+`
 const templateImageFormat = (size='large') => ({id, type, data}) => `<img id="${id}" type="${type}" style="${imageStyle}" src="${data.file.formats[size].url}" alt="${data.file.alternativeText}">`
 const templateImage = ({id, type, data}) => `<img id="${id}" type="${type}" style="${imageStyle}" src="${data.file.url}" alt="${data.file.alternativeText}">`
 const templateList = (listTag) => ({id, type, data}) => `
