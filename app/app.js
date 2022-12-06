@@ -6,6 +6,8 @@ dotenv.config() //Allows usage of process.env.YOUR_VARS
 const app = express()
 const port = 3000
 
+app.use(express.static('public'))
+
 app.get('/', (req, res) => {
     res.send('Hey you! What the heck are you doing here?? Get the heck off my site!')
 })
