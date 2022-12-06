@@ -1,6 +1,6 @@
-import * as dotenv from 'dotenv'
-import https from 'https'
-import express from 'express'
+const dotenv = require('dotenv')
+const https = require('https')
+const express = require('express')
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 const app = express()
@@ -58,37 +58,72 @@ const parseEditorJsBody = (body) => {
     return JSON.parse(body)
 }
 
-const imageStyle = 'width: 100%; object-fit: contain; display: block; margin-left: auto; margin-right: auto;'
-const delimiterStyle = "height: 2px; border-width: 0; color: gray; background-color: gray;"
-const tableStyle = 'width: 100%; border:1px solid black;'
-const tableRowStyle = 'border:1px solid black;'
-const tableDataStyle = 'border:1px solid black;'
-const linkTableStyle = 'width: 100%; border:1px solid black;'
-const linkImageStyle = 'height: 125px;'
-
-const headderStyles = [
+const styles = {
+    image: 'width: 100%; object-fit: contain; display: block; margin-left: auto; margin-right: auto;',
+    delimiter: "height: 2px; border-width: 0; color: gray; background-color: gray;",
+    table: 'width: 100%; border: 1px solid black;',
+    tableRow: 'border:1px solid black;',
+    tableData: 'border:1px solid black;',
+    linkTable: 'width: 100%; border: 1px solid black;',
+    linkImage: 'height: 125px;',
     // 'font-family: lust, serif;',
     // 'font-family: temeraire, serif; font-weight: 900; font-style: normal;',
     // 'font-family: miller-headline, serif; font-weight: 700; font-style: normal;',
-    'font-family: miller-headline, serif; font-weight: 600; font-style: normal; font-size: 42px;',
-    'font-family: abril-text, serif; font-weight: 600; font-style: normal;',
-    'font-family: korolev, sans-serif; font-weight: 500; font-style: normal;',
-    'font-family: korolev, sans-serif; font-weight: 400; font-style: normal;',
-    'font-family: korolev, sans-serif; font-weight: 300; font-style: normal;',
-    'font-family: korolev, sans-serif; font-weight: 200; font-style: normal;',
-]
-const paragraphStyle = 'text-align:justify; font-family: le-monde-livre-classic-byol, serif; font-weight: 400; font-style: normal; letter-spacing: .12px; color: #231f20; font-size: 17px; line-height: 25px;'
-// const paragraphStyle = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 300; font-style: normal;'
-// const paragraphStyle = 'font-family: open-sans, sans-serif; font-weight: 300; font-style: normal;'
-const firstLetterStylye = 'font-family: le-monde-livre-classic-byol, serif; font-weight: 700; font-style: normal;'
-const wrapperStyle = () => `
-    width: 95%; 
-    ${!isMobile ? 'max-width: 600px;' : ''}
-    object-fit: contain; 
-    display: block; 
-    margin: 0 auto; 
-    padding: 20px 0;
-`
+    h1: `font-family: miller-headline, serif; font-weight: 600; font-style: normal; font-size: 42px;`,
+    h2: `font-family: abril-text, serif; font-weight: 600; font-style: normal; font-size: 32px;`,
+    h3: `font-family: korolev, sans-serif; font-weight: 500; font-style: normal; font-size: 26;`,
+    h4: `font-family: korolev, sans-serif; font-weight: 400; font-style: normal; font-size: 22px;`,
+    h5: `font-family: korolev, sans-serif; font-weight: 300; font-style: normal; font-size: 20px;`,
+    h6: `font-family: korolev, sans-serif; font-weight: 200; font-style: normal; font-size: 18px;`,
+    paragraph: `text-align:justify; font-family: le-monde-livre-classic-byol, serif; font-weight: 400; font-style: normal; color: #231f20; font-size: 17px; line-height: 25px; letter-spacing: .12px;`,
+    // paragraph: 'font-family: le-monde-livre-classic-byol, serif; font-weight: 300; font-style: normal;',
+    // paragraph: 'font-family: open-sans, sans-serif; font-weight: 300; font-style: normal;',
+    firstLetter: 'font-family: le-monde-livre-classic-byol, serif; font-weight: 700; font-style: normal; font-size: 65px; float: left; line-height: 45px; margin: 2px 2px 0 0; color: DarkSlateGrey;',
+    wrapper: `
+        width: 95%; 
+        text-align: justify;
+        text-size-adjust: none;
+        object-fit: contain; 
+        display: block; 
+        margin: 0 auto; 
+        padding: 20px 0;
+        font-size: 14px;
+        max-width: 600px;
+    `
+}
+
+//Replace instances of 123px with (123 * multiplier)px for certain css attributes.
+const applyFontMultiplier = (style, multiplier) => {
+    const patterns = {
+        'font-size': /(letter-spacing:[\s]*)(\d*\.?\d+)([\s]*px)/, //^\d*\.?\d+$ match positive floats and numbers https://stackoverflow.com/questions/10921058/regex-matching-numbers-and-decimals
+        'line-height': /(line-height:[\s]*)(\d*\.?\d+)([\s]*px)/, 
+        'font-size': /(font-size:[\s]*)(\d*\.?\d+)([\s]*px)/, 
+    }
+    style = Object.values(patterns).reduce((accStyle, pattern) => {
+        return accStyle.replace(pattern, (match, start, pixels, end) => {
+            return start + (parseFloat(pixels) * multiplier) + end
+        })
+    }, style)
+    return style
+}
+
+const removeMaxWidth = (style) => {
+    return style.replace('max-width:[\s]*\d*\.?\d+px;', '');
+}
+
+const mobileStyles = JSON.parse(JSON.stringify(styles))
+Object.keys(mobileStyles).forEach(key => mobileStyles[key] = applyFontMultiplier(mobileStyles[key], 2))
+// mobileStyles.wrapper = removeMaxWidth(mobileStyles.wrapper)
+mobileStyles.wrapper = `
+        width: 95%; 
+        text-size-adjust: none;
+        object-fit: contain; 
+        display: block; 
+        margin: 0 auto; 
+        padding: 20px 0;
+        font-size: 30px;
+    `
+let activeStyle = {}
 
 const imageSize = {
     large: 'large',
@@ -104,13 +139,7 @@ const templateHtmlHead = ({Title}) => `
         <title>${Title}</title>
         <style>
             .intro::first-letter {
-                font-family: le-monde-livre-classic-byol, serif; font-weight: 700; font-style: normal;
-                color: hsl(350, 50%, 50%);
-                font-size: 4rem;
-                float: left;
-                line-height: .7;
-                margin: 2px 2px 0 0;
-                color: DarkSlateGrey;
+                ${activeStyle.firstLetter}
             }
 
             h1 a, h1 a:link, h1 a:visited, h1 a:focus, h1 a:active,
@@ -142,32 +171,32 @@ const templateHtmlHead = ({Title}) => `
     </head>
 `
 const templateWrapperBody = ({content}) => `
-    <div style="${wrapperStyle()}">${content}</div>
+    <body><div style="${activeStyle.wrapper}">${content}</div></body>
 `
 const templateModelIndex = ({model, data}) => 
     data.map(item => 
-        `<h2 style="${headderStyles[1]}"><a href="./${model}/${item.id}" target="_self">${item.attributes.Title}</a></h2>`
+        `<h2 style="${activeStyle.h2}"><a href="./${model}/${item.id}" target="_self">${item.attributes.Title}</a></h2>`
     ).join('')
 
-const templateSlug = ({id='', model, Title}) => `<h1 id="${id}" style="${headderStyles[0]}"><a href="../${model}" target="_self">${model}</a> • ${Title}</h1>`
-const templateTitle = ({id, Title}) => `<h1 ${ id ? `id="${id}"` : ''} style="${headderStyles[0]}">${Title}</h1>`
+const templateSlug = ({id='', model, Title}) => `<h1 id="${id}" style="${activeStyle.h1}"><a href="../${model}" target="_self">${model}</a> • ${Title}</h1>`
+const templateTitle = ({id, Title}) => `<h1 ${ id ? `id="${id}"` : ''} style="${activeStyle.h1}">${Title}</h1>`
 
 const templateParagraph = ({id, type, data}) => `
     <p 
         id="${id}" 
         type="${type}" 
-        style="${paragraphStyle}"
+        style="${activeStyle.paragraph}"
         ${data.into ? 'class="intro"' : ''}
     >
         ${data.text}
     </p>`
 const templateHeader = ({id, type, data}) => `
-    <h${data.level} id="${data.text}" type="${type}" style="${headderStyles[data.level - 1]}">
+    <h${data.level} id="${data.text}" type="${type}" style="${activeStyle[`h${data.level}`]}">
         <a href="#${data.text}" target="_self">${data.text}</a>
     </h${data.level}>
 `
-const templateImageFormat = (size='large') => ({id, type, data}) => `<img id="${id}" type="${type}" style="${imageStyle}" src="${data.file.formats[size].url}" alt="${data.file.alternativeText}">`
-const templateImage = ({id, type, data}) => `<img id="${id}" type="${type}" style="${imageStyle}" src="${data.file.url}" alt="${data.file.alternativeText}">`
+const templateImageFormat = (size='large') => ({id, type, data}) => `<img id="${id}" type="${type}" style="${activeStyle.image}" src="${data.file.formats[size].url}" alt="${data.file.alternativeText}">`
+const templateImage = ({id, type, data}) => `<img id="${id}" type="${type}" style="${activeStyle.image}" src="${data.file.url}" alt="${data.file.alternativeText}">`
 const templateList = (listTag) => ({id, type, data}) => `
     <${listTag} id="${id}" type="${type}">
         ${
@@ -180,15 +209,15 @@ const templateList = (listTag) => ({id, type, data}) => `
 const templateListUnordered = templateList('ul');
 const templateListOrdered = templateList('ol');
 const templateEmbed = ({id, type, data}) => `<iframe id="${id}" type="${type}" src="${data.embed}" height="${data.height}" width="${data.width}" title="${data.caption}"></iframe>`
-const templateDelimiter = ({id, type, data}) => `<hr id="${id}" type="${type}" style="${delimiterStyle}">`
+const templateDelimiter = ({id, type, data}) => `<hr id="${id}" type="${type}" style="${activeStyle.delimiter}">`
 const templateTable = ({id, type, data}) => `
-    <table id="${id}" type="${type}" style="${tableStyle}">
+    <table id="${id}" type="${type}" style="${activeStyle.table}">
         ${
             data.content.reduce((trAcc, trCur, i) => {
                 const tag = data.withHeadings && i == 0 ? 'th' : 'td'
                 return trAcc + `
-                    <tr style="${tableRowStyle}">
-                        ${trCur.reduce((tdAcc, tdCur) => tdAcc + `<${tag} style="${tableDataStyle}">${tdCur}</${tag}>`, '')}
+                    <tr style="${activeStyle.tableRow}">
+                        ${trCur.reduce((tdAcc, tdCur) => tdAcc + `<${tag} style="${activeStyle.tableData}">${tdCur}</${tag}>`, '')}
                     </tr>
                 `
             }, '')
@@ -198,15 +227,15 @@ const templateTable = ({id, type, data}) => `
 const templateCode = ({id, type, data}) => `<pre id="${id}" type="${type}">${data.code}</pre>`
 const templateRaw = ({id, type, data}) => `<pre id="${id}" type="${type}">${data.html}</pre>`
 const templateLink = ({id, type, data}) => `
-    <table id="${id}" type="${type}" style="${linkTableStyle}">
+    <table id="${id}" type="${type}" style="${activeStyle.table}">
         <tr> 
             <td>
-                <h3 style="${headderStyles[2]}"><a href="${data.link}" target="_blank">${data.meta.title}</a></h3>
+                <h3 style="${activeStyle.h3}"><a href="${data.link}" target="_blank">${data.meta.title}</a></h3>
                 <p>${data.meta.description}</p>
             </td>
             <td>
                 <a href="${data.link} target="_blank"">
-                    <img src="${data.meta.image.url}" style="${linkImageStyle}">
+                    <img src="${data.meta.image.url}" style="${activeStyle.linkImage}">
                 </a>
             </td>
         </tr> 
@@ -268,11 +297,10 @@ const renderEditorJs = (blocks) => {
 }
 
 const allowedModels = ['blogs']
-let isMobile = false
 const setIsMobile = (userAgent) => {
-    isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+    const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+    activeStyle = isMobile ? mobileStyles : styles;
 }
-
 const serverError = (error, res) => {
     res.status(500).send(error.status + " " + error.message) //TODO user friendly errors
 }
@@ -354,3 +382,5 @@ app.get('/:model/:id/raw', function (req, res) {
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
+
+module.exports = app;
