@@ -1,0 +1,9 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "bootstrap-sam-app"
+s3_bucket = "hfmd-lambda-prod"
+region = "us-west-2"
+capabilities = "CAPABILITY_IAM"
+image_repositories = ["HelloWorldFunction=453536716090.dkr.ecr.us-west-2.amazonaws.com/hfmd-frontend"]

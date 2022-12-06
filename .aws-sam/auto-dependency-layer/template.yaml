@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'app Sample SAM Template for app
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Events:
+        SimpleApp:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: any
+      ImageUri: helloworldfunction:nodejs14.x-v1
+    Metadata:
+      DockerContext: C:\Stuff\Workspace\hfmd-frontend
+      DockerTag: nodejs14.x-v1
+      Dockerfile: Dockerfile
+      SamResourceId: HelloWorldFunction
+Outputs:
+  SimpleAppApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  HelloWorldFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunction
+      - Arn
+  HelloWorldFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunctionRole
+      - Arn

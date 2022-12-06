@@ -12,5 +12,40 @@
             "request": "launch",
             "type": "node-terminal"
         },
+        {
+            "name": "Build",
+            "command": "sam build",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+        {
+            "name": "Start Build",
+            "command": "sam local start-api --env-vars \"env/sam.env.json\"",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+        {
+            "name": "Deploy",
+            "command": "sam deploy",
+            "request": "launch",
+            "type": "node-terminal"
+            
+        },
+
+        //TODO move these to Readme#Helpful commands. 
+        //sam logs -n HelloWorldFunction — stack-name <stack_app> — tail
+
+        // [*] Validate SAM template: sam validate
+        // [*] Invoke Function: sam local invoke
+        // [*] Test Function in the Cloud: sam sync --stack-name {{stack-name}} --watch
+        // [*] Deploy: sam deploy --guided
+
+        //p.s. it will work with start-api/start-lambda/invoke all in the same way, but it looks 
+        //like sam deploy only works with --parameter-overrides SomeVar=other_value and no --env-vars
+
+        //run docker build docker run -p 9000:8080 helloworldfunction:rapid-1.30.0
+
+        //aws lambda update-function-configuration --function-name my-function --environment "Variables={BUCKET=my-bucket,KEY=file.txt}"
+
     ]
 }
