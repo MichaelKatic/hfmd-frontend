@@ -118,14 +118,22 @@ class Element {
 
     push = (item) => { 
         if (Array.isArray(item)) {
-            this.#content.concat = this.#content.concat(item)
+            this.#content.push(...item)
         } else {
             this.#content.push(item)
         }
         return this;
     }
 
-    #renderAttributes = () => Object.keys(this.attributes).map(key => `${key}=${JSON.stringify(this.attributes[key])}`).join('')
+    #renderAttributes = () => Object.keys(this.attributes).map(key => {
+        if (key === 'checked')
+        {
+            return this.attributes[key] ? key : ''
+        }
+
+        return `${key}=${JSON.stringify(this.attributes[key])}`
+    }).join('')
+    
 
     #renderContent = (content) => {
         content = content || this.content

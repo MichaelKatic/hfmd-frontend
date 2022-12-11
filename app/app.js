@@ -1,7 +1,7 @@
 const dotenv = require('dotenv')
 const https = require('https')
 const express = require('express')
-const { Body, Division, Paragraph } = require('./element/element.js')
+const { Element, Body, Division, Paragraph } = require('./element/element.js')
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 const app = express()
@@ -244,16 +244,22 @@ const templateHeader = ({id, type, data}) => `
     </h${data.level}>
 `
 const templateImageFormat = (size='large') => ({id, type, data}) => `<img id="${id}" type="${type}" style="${activeStyle.image}" src="${data.file.formats[size].url}" alt="${data.file.alternativeText}">`
-const templateImage = ({id, type, data}) => `<img id="${id}" type="${type}" style="${activeStyle.image}" src="${data.file.url}" alt="${data.file.alternativeText}">`
-const templateList = (listTag) => ({id, type, data}) => `
-    <${listTag} id="${id}" type="${type}">
-        ${
-            data.items.reduce((acc, cur) => 
-                acc + `<li>${cur}</li>`
-            , '')
-        }
-    </${listTag}>
-`
+const templateImage = ({id, type, data}) => 
+    new Element('img')
+        .id(id)
+        .type(type)
+        .style(activeStyle.image)
+        .src(data.file.url)
+        .alt(data.file.alternativeText)
+        .render()
+
+const templateList = (listTag) => ({id, type, data}) => 
+    new Element(listTag)
+        .id(id)
+        .type(type)
+        .push(data.items.map(item => new Element('li', '', item)))
+        .render()
+
 const templateListUnordered = templateList('ul');
 const templateListOrdered = templateList('ol');
 const templateEmbed = ({id, type, data}) => `<iframe id="${id}" type="${type}" src="${data.embed}" height="${data.height}" width="${data.width}" title="${data.caption}"></iframe>`
@@ -291,21 +297,19 @@ const templateLink = ({id, type, data}) => `
         </tr> 
     </table>
 `
-const templateChecklist = ({id, type, data}) => `
-    <div id="${id}" type="${type}">
-        ${
-            data.items.reduce((acc, cur, i) => {
-                const checked = cur.checked ? 'checked' : ''
-                return acc + `
-                    <p>
-                        <input type="checkbox" id="${id + i}" onclick="return false;" ${checked}/>
-                        <label for="${id + i}">${cur.text}</label>
-                    </p>
-                `
-            }, '')
-        }
-    </div>
-`
+const templateChecklist = ({id, type, data}) => 
+    new Division().id(id).type(type).push(
+        data.items.map((item, i) => {
+            return new Paragraph().push([
+                new Element('input').type('checkbox').id(id + i)
+                    .onclick('return false')
+                    .checked(item.checked),
+                new Element('label')
+                    .for(id + i)
+                    .push(item.text)
+            ])
+        })
+    ).render()
 
 const mapTemplate = ({id, type, data}) => {
     const templateDefault = ({id, type, data}) => `<p>id: ${id} type: ${type} data: ${JSON.stringify(data)}</p>`;;
