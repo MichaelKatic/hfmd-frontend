@@ -1,6 +1,7 @@
 const dotenv = require('dotenv')
 const https = require('https')
 const express = require('express')
+const { Body, Division, Paragraph } = require('./element/element.js')
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 const app = express()
@@ -180,6 +181,29 @@ const templateHome = ({models}) => `
         }
     </h1>
 `
+const templateWrapperBody = ({content}) => 
+    new Body().push(
+        new Division().style(activeStyle.wrapper).push(
+            content
+        )
+    ).render()
+
+const templateWrapperBodyAlt1 = ({content}) => {
+    return new Body({content: 
+        new Division({style: activeStyle.wrapper}, content)
+    }).render()
+}
+
+const templateWrapperBodyAlt2 = ({content}) => {
+    const div = new Division().style(activeStyle.wrapper)
+    div.push(content)
+
+    const body = new Body()
+    body.push(div)
+
+    return body.render()
+}
+
 const templateModelIndex = ({model, data}) => 
     data.map(item => 
         `<h2 style="${activeStyle.h2}"><a href="./${model}/${item.id}" target="_self">${item.attributes.Title}</a></h2>`
@@ -205,18 +229,15 @@ const templateTitle = ({id, Title}) => `
         ${Title}
     </h1>
 `
+const templateParagraph = ({id, type, data}) => 
+    new Paragraph()
+        .id(id)
+        .type(type)
+        .style(activeStyle.paragraph)
+        .class(data.into ? 'intro' : undefined)
+        .push(data.text)
+        .render()
 
-
-
-const templateParagraph = ({id, type, data}) => `
-    <p 
-        id="${id}" 
-        type="${type}" 
-        style="${activeStyle.paragraph}"
-        ${data.into ? 'class="intro"' : ''}
-    >
-        ${data.text}
-    </p>`
 const templateHeader = ({id, type, data}) => `
     <h${data.level} id="${data.text}" type="${type}" style="${activeStyle[`h${data.level}`]}">
         <a href="#${data.text}" target="_self">${data.text}</a>
