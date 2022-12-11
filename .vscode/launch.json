@@ -19,13 +19,13 @@
             "type": "node-terminal"
         },
         {
-            "name": "Start Build",
+            "name": "Start (Sam Build)",
             "command": "sam local start-api --env-vars \"env/sam.env.json\"",
             "request": "launch",
             "type": "node-terminal"
         },
         {
-            "name": "Deploy",
+            "name": "Deploy (AWS SAM)",
             "command": "sam deploy",
             "request": "launch",
             "type": "node-terminal"
