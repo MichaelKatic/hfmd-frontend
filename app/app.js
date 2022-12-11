@@ -8,10 +8,6 @@ const port = 3000
 
 app.use(express.static('public'))
 
-app.get('/', (req, res) => {
-    res.send('Hey you! What the heck are you doing here?? Get the heck off my site!')
-})
-
 const getHelper = (url) => new Promise((resolve, reject) => {
     const options = {
         headers: {
@@ -61,19 +57,20 @@ const parseEditorJsBody = (body) => {
 }
 
 const styles = {
-    image: 'width: 100%; object-fit: contain; display: block; margin-left: auto; margin-right: auto;',
+    image: 'width: 100%; object-fit: contain; display: block; margin-left: auto; margin-right: auto; border-radius: 10px;',
     delimiter: "height: 2px; border-width: 0; color: gray; background-color: gray;",
-    table: 'width: 100%; border: 1px solid black;',
-    tableRow: 'border:1px solid black;',
-    tableData: 'border:1px solid black;',
-    linkTable: 'width: 100%; border: 1px solid black;',
+    table: 'width: 100%;',
+    tableRow: '',
+    tableData: '',
+    linkTable: 'width: 100%; ',
     linkImage: 'height: 125px;',
     // 'font-family: lust, serif;',
     // 'font-family: temeraire, serif; font-weight: 900; font-style: normal;',
     // 'font-family: miller-headline, serif; font-weight: 700; font-style: normal;',
+    title: `font-family: lust-script, sans-serif; font-weight: 700; font-style: normal; font-size: 50px;`,
     h1: `font-family: miller-headline, serif; font-weight: 600; font-style: normal; font-size: 42px;`,
     h2: `font-family: abril-text, serif; font-weight: 600; font-style: normal; font-size: 32px;`,
-    h3: `font-family: korolev, sans-serif; font-weight: 500; font-style: normal; font-size: 26;`,
+    h3: `font-family: korolev, sans-serif; font-weight: 500; font-style: normal; font-size: 26px;`,
     h4: `font-family: korolev, sans-serif; font-weight: 400; font-style: normal; font-size: 22px;`,
     h5: `font-family: korolev, sans-serif; font-weight: 300; font-style: normal; font-size: 20px;`,
     h6: `font-family: korolev, sans-serif; font-weight: 200; font-style: normal; font-size: 18px;`,
@@ -89,7 +86,8 @@ const styles = {
         display: block; 
         margin: 0 auto; 
         padding: 20px 0;
-        font-size: 14px;
+        font-family: le-monde-livre-classic-byol, serif;
+        font-size: 17px;
         max-width: 600px;
     `
 }
@@ -123,9 +121,11 @@ mobileStyles.wrapper = `
         display: block; 
         margin: 0 auto; 
         padding: 20px 0;
-        font-size: 30px;
+        font-family: le-monde-livre-classic-byol, serif;
+        font-size: 34px;
     `
 let activeStyle = {}
+let isMobile = false;
 
 const imageSize = {
     large: 'large',
@@ -134,54 +134,79 @@ const imageSize = {
     thumbnail: 'thumbnail'
 }
 
+// Cool image styling
+// https://www.w3schools.com/css/css3_images.asp
+
+// Responsive website layouts:
+// https://www.w3schools.com/css/tryit.asp?filename=trycss3_flexbox_website2
+
 // AMAZING FONT REFERENCE:
 // https://xd.adobe.com/ideas/principles/web-design/best-modern-fonts-for-websites/
-const templateHtmlHead = ({Title}) => `
+const templateHtmlHead = ({Title, isMobile}) => `
     <head>
         <title>${Title}</title>
         <style>
             .intro::first-letter {
                 ${activeStyle.firstLetter}
             }
-
-            h1 a, h1 a:link, h1 a:visited, h1 a:focus, h1 a:active,
-            h2 a, h2 a:link, h2 a:visited, h2 a:focus, h2 a:active {
-                color: DarkSlateGray;
-                text-decoration: none; 
-            }
-            h1 a:hover,
-            h2 a:hover {
-                color: green;
-                text-decoration: none; 
-            }
-            
-            p a, p a:link, p a:visited, p a:focus, p a:active {
-                color: #026eea;
-                text-decoration: underline; 
-                background-image: url(https://xd.adobe.com/ideas/wp-content/uploads/2019/10/hover-blue-7.png);
-                background-position: 0 12px;
-                background-repeat: repeat-x;
-                text-decoration: none;
-            }
-
-            p a:hover {
-                color: #026eea;
-                text-decoration: none;
-            }
         </style>
+
+        ${isMobile ? 
+            '<link rel="stylesheet" type="text/css" href="/css/style-mobile.css" />'
+        :
+            '<link rel="stylesheet" type="text/css" href="/css/style-desktop.css" />'
+        }
+
+        <!-- <link rel="stylesheet" type="text/css" href="/element/element.ts" /> -->
+        <!-- <link rel="stylesheet" type="text/css" href="/element/element.js" /> -->        
+
+        <link rel="stylesheet" type="text/css" href="/css/style.css" />
+
         <link rel="stylesheet" href="https://use.typekit.net/whq2zsc.css"> <!--fonts from adobe-->
+
+        <link rel="icon" type="image/png" href="/favicon/coffee-16.ico">
     </head>
 `
-const templateWrapperBody = ({content}) => `
-    <body><div style="${activeStyle.wrapper}">${content}</div></body>
+const templateHome = ({models}) => `
+    <h1 style="${activeStyle.title}">
+        ${templateLogo()}
+        Home for my Dome
+    </h1>
+    <h1 style="${activeStyle.h1}">
+        ${
+            models.map(
+                model => `<a href="./${model}" target="_self">${model}</a>`
+            ).join('')
+        }
+    </h1>
 `
 const templateModelIndex = ({model, data}) => 
     data.map(item => 
         `<h2 style="${activeStyle.h2}"><a href="./${model}/${item.id}" target="_self">${item.attributes.Title}</a></h2>`
     ).join('')
+const templateLogo = () => `
+    <a href="/" target="_self"">
+        <img src="/images/stewart.png" style="image-rendering: pixelated; height: 1em;">
+    </a>
+`
+const templateBreadcrumb = ({id='', model, Title}) => `
+    <h1 id="${id}" style="${activeStyle.h1}">
+        ${templateLogo()}
+        •
+        <a href="../${model}" target="_self">${model}</a>
+        •
+        ${Title}
+    </h1>
+`
+const templateTitle = ({id, Title}) => `
+    <h1 ${ id ? `id="${id}"` : ''} style="${activeStyle.h1}">
+        ${templateLogo()}
+        •
+        ${Title}
+    </h1>
+`
 
-const templateSlug = ({id='', model, Title}) => `<h1 id="${id}" style="${activeStyle.h1}"><a href="../${model}" target="_self">${model}</a> • ${Title}</h1>`
-const templateTitle = ({id, Title}) => `<h1 ${ id ? `id="${id}"` : ''} style="${activeStyle.h1}">${Title}</h1>`
+
 
 const templateParagraph = ({id, type, data}) => `
     <p 
@@ -215,17 +240,19 @@ const templateDelimiter = ({id, type, data}) => `<hr id="${id}" type="${type}" s
 const templateTable = ({id, type, data}) => `
     <table id="${id}" type="${type}" style="${activeStyle.table}">
         ${
-            data.content.reduce((trAcc, trCur, i) => {
+            data.content.map((row, i) => {
                 const tag = data.withHeadings && i == 0 ? 'th' : 'td'
-                return trAcc + `
+                return `
                     <tr style="${activeStyle.tableRow}">
-                        ${trCur.reduce((tdAcc, tdCur) => tdAcc + `<${tag} style="${activeStyle.tableData}">${tdCur}</${tag}>`, '')}
+                        ${row.map(column => `<${tag} style="${activeStyle.tableData}">${column}</${tag}>`, '').join('')}
                     </tr>
                 `
-            }, '')
+            }).join('')
         }
     </table>
 `
+
+// const templateFlexTable = //TODO FLEX TABLES 
 const templateCode = ({id, type, data}) => `<pre id="${id}" type="${type}">${data.code}</pre>`
 const templateRaw = ({id, type, data}) => `<pre id="${id}" type="${type}">${data.html}</pre>`
 const templateLink = ({id, type, data}) => `
@@ -236,7 +263,7 @@ const templateLink = ({id, type, data}) => `
                 <p>${data.meta.description}</p>
             </td>
             <td>
-                <a href="${data.link} target="_blank"">
+                <a href="${data.link}" target="_blank"">
                     <img src="${data.meta.image.url}" style="${activeStyle.linkImage}">
                 </a>
             </td>
@@ -300,12 +327,21 @@ const renderEditorJs = (blocks) => {
 
 const allowedModels = ['blogs']
 const setIsMobile = (userAgent) => {
-    const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+    isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
     activeStyle = isMobile ? mobileStyles : styles;
 }
 const serverError = (error, res) => {
     res.status(500).send(error.status + " " + error.message) //TODO user friendly errors
 }
+
+app.get('/', (req, res) => {
+    setIsMobile(req.get('user-agent'))
+
+    const headHtml = templateHtmlHead({Title: 'Home for my Dome', isMobile});
+    const titleHtml = templateHome({models: allowedModels})
+    const wrappedBodyHtml = templateWrapperBody({content: titleHtml})
+    res.send(headHtml + wrappedBodyHtml)
+})
 
 app.get('/:model', function (req, res) {
     const model = req.params.model
@@ -322,7 +358,7 @@ app.get('/:model', function (req, res) {
 
     getHelper(`https://cms.homeformydome.com/api/${model}?fields=${fields}`).then(
         response => {
-            const headHtml = templateHtmlHead({Title: model});
+            const headHtml = templateHtmlHead({Title: model, isMobile});
             const titleHtml = templateTitle({Title: model})
             const data = response.data;
             const modelIndexHtml = templateModelIndex({model, data})
@@ -347,8 +383,8 @@ app.get('/:model/:id', function (req, res) {
 
     getHelper(`https://cms.homeformydome.com/api/${model}/${id}`).then(
         response => {
-            const headHtml = templateHtmlHead({Title: response.data.attributes.Title});
-            const titleHtml = templateSlug({
+            const headHtml = templateHtmlHead({Title: response.data.attributes.Title, isMobile});
+            const titleHtml = templateBreadcrumb({
                 id: response.data.id,
                 Title: response.data.attributes.Title,
                 model,

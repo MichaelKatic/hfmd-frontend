@@ -1,0 +1,51 @@
+.flex-container{
+    display: flex;
+}
+
+table {
+    border-collapse: collapse;
+    padding: 2%;
+    border: 10px solid rgb(255, 255, 255);
+}
+
+td {
+    padding: 2%;
+    border: 2px solid rgb(184, 184, 184);
+}
+
+
+h1 a, h1 a:link, h1 a:visited, h1 a:focus, h1 a:active,
+h2 a, h2 a:link, h2 a:visited, h2 a:focus, h2 a:active,
+h3 a, h3 a:link, h3 a:visited, h3 a:focus, h3 a:active,
+h4 a, h4 a:link, h4 a:visited, h4 a:focus, h4 a:active,
+h5 a, h5 a:link, h5 a:visited, h5 a:focus, h5 a:active,
+h6 a, h6 a:link, h6 a:visited, h6 a:focus, h6 a:active {
+    color: DarkSlateGray;
+    text-decoration: none; 
+}
+
+h1 a:hover,
+h2 a:hover,
+h3 a:hover,
+h4 a:hover,
+h5 a:hover,
+h6 a:hover {
+    color: green;
+    text-decoration: none; 
+}
+
+table a, table a:link, table a:visited, table a:focus, table a:active,
+p a, p a:link, p a:visited, p a:focus, p a:active {
+    color: #026eea;
+    text-decoration: underline; 
+    background-image: url(https://xd.adobe.com/ideas/wp-content/uploads/2019/10/hover-blue-7.png);
+    background-position: 0 12px;
+    background-repeat: repeat-x;
+    text-decoration: none;
+}
+
+table a:hover,
+p a:hover {
+    color: #026eea;
+    text-decoration: none;
+}
