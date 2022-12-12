@@ -1,7 +1,35 @@
 const dotenv = require('dotenv')
 const https = require('https')
 const express = require('express')
-const { Element, Body, Division, Paragraph, Header, Table } = require('./element/element.js')
+// const e = require('./element/element.js')
+const { 
+    Element, 
+    $A,
+    $Body,
+    $Division,
+    $H,
+    $H1,
+    $H2,
+    $H3,
+    $H4,
+    $H5,
+    $H6,
+    $Head,
+    $Hr,
+    $Iframe,
+    $Img,
+    $Input,
+    $Label,
+    $Li,
+    $Link,
+    $Paragraph,
+    $Pre,
+    $Style,
+    $Table,
+    $Td,
+    $Title,
+    $Tr
+} = require('./element/element.js')
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 const app = express()
@@ -143,223 +171,152 @@ const imageSize = {
 
 // AMAZING FONT REFERENCE:
 // https://xd.adobe.com/ideas/principles/web-design/best-modern-fonts-for-websites/
-const templateHtmlHead = ({Title, isMobile}) => 
-    new Element('head').push([
-        new Element('title').push(Title),
-        new Element('style').push(`
+const templateHtmlHead = ({title, isMobile}) => 
+    $Head.push([
+        $Title.push(title),
+        $Style.push(`
             .intro::first-letter {
                 ${activeStyle.firstLetter}
             }
         `),
-        new Element('link').rel('stylesheet').type('text/css').href(`/css/style-${isMobile ? 'mobile' : 'desktop'}.css`),
-        new Element('link').rel('stylesheet').type('text/css').href('/css/style.css'),
-        new Element('link').rel('stylesheet').href('https://use.typekit.net/whq2zsc.css'), //Adobe font styles
-        new Element('link').rel('icon').type('image/png').href('/favicon/coffee-16.ico'),
+        $Link.rel('stylesheet').type('text/css').href(`/css/style-${isMobile ? 'mobile' : 'desktop'}.css`),
+        $Link.rel('stylesheet').type('text/css').href('/css/style.css'),
+        $Link.rel('stylesheet').href('https://use.typekit.net/whq2zsc.css'), //Adobe font styles
+        $Link.rel('icon').type('image/png').href('/favicon/coffee-16.ico'),
     ]).render()
 
 const templateHome = ({models}) => 
-    new Element('h1')
-        .style(activeStyle.title)
-        .push([
-            templateLogo(),
-            ' Home for my Dome'
-        ]).render() +
-    new Element('h1')
-        .style(activeStyle.h1)
-        .push(
-            models.map(model => 
-                new Element('a')
-                    .href('./' + model)
-                    .target('_self')
-                    .push(model)
-            )
-        ).render()
-
-const templateWrapperBody = ({content}) => 
-    new Body().push(
-        new Division().style(activeStyle.wrapper).push(
-            content
+    $H1.style(activeStyle.title).push([templateLogo(), ' Home for my Dome']).render() +
+    $H1.style(activeStyle.h1).push(
+        models.map(model => 
+            $A.href('./' + model).target('_self').push(model)
         )
     ).render()
 
-const templateWrapperBodyAlt2 = ({content}) => {
-    const div = new Division().style(activeStyle.wrapper)
-    div.push(content)
-
-    const body = new Body()
-    body.push(div)
-
-    return body.render()
-}
+const templateWrapperBody = ({content}) => 
+    $Body.push(
+        $Division.style(activeStyle.wrapper).push(
+            content
+        )
+    ).render()
     
 const templateModelIndex = ({model, data}) => 
     data.map(item =>
-        new Element('h2')
-            .style(activeStyle.h2)
-            .push(
-                new Element('a')
-                    .href('./' + model + '/' + item.id)
-                    .target('_self')
-                    .push(item.attributes.Title)
-            ).render()
+        $H2.style(activeStyle.h2).push(
+            $A.href('./' + model + '/' + item.id).target('_self').push(
+                item.attributes.Title
+            )
+        ).render()
     ).join('')
 
 const templateLogo = () => 
-    new Element('a')
-        .href('/')
-        .target('_self')
-        .push(
-            new Element('img')
-                .src('/images/stewart.png')
-                .style('image-rendering: pixelated; height: 1em;')
-        ).render()
+    $A.href('/').target('_self').push(
+        $Img.src('/images/stewart.png').style('image-rendering: pixelated; height: 1em;')
+    ).render()
 
-const templateBreadcrumb = ({id='', model, Title}) => 
-    new Element('h1')
-        .id(id)
-        .style(activeStyle.h1)
-        .push([
-            templateLogo(),
-            ' • ',
-            new Element('a').href('../' + model).target('_self').push(model),
-            ' • ',
-            Title,
-        ]).render()
+const templateBreadcrumb = ({id='', model, title}) => 
+    $H1.id(id).style(activeStyle.h1).push([
+        templateLogo(),
+        ' • ',
+        $A.href('../' + model).target('_self').push(model),
+        ' • ',
+        title,
+    ]).render()
 
-const templateTitle = ({id, Title}) => 
-    new Element('h1')
-        .id(id ?? undefined)
-        .style(activeStyle.h1)
-        .push(
-            templateLogo() + ' • ' + Title 
-        ).render()
+const templateTitle = ({id, title}) => 
+    $H1.id(id ?? undefined).style(activeStyle.h1).push(
+        templateLogo() + ' • ' + title 
+    ).render()
 
 const templateParagraph = ({id, type, data}) => 
-    new Paragraph()
-        .id(id)
-        .type(type)
-        .style(activeStyle.paragraph)
-        .class(data.into ? 'intro' : undefined)
-        .push(data.text)
-        .render()
+    $Paragraph.id(id).type(type).style(activeStyle.paragraph).class(data.into ? 'intro' : undefined).push(
+        data.text
+    ).render()
 
 const templateHeader = ({id, type, data}) => {
     const tag = 'h' + data.level
-    return new Element(tag)
-        .id(data.text)
-        .type(type)
-        .style(activeStyle[tag])
-        .push(
-            new Element('a')
-                .href('#' + data.text)
-                .target('_self')
-                .push(data.text)
-        ).render()
+    return new $H.level(data.level).id(data.text).type(type).style(activeStyle[tag]).push(
+        $A.href('#' + data.text).target('_self').push(
+            data.text
+        )
+    ).render()
 }
 
 const templateImageFormat = (size='large') => ({id, type, data}) => 
-    new Element('img')
-        .id(id)
-        .type(type)
-        .style(activeStyle.image)
+    $Img.id(id).type(type).style(activeStyle.image)
         .src(data.file.formats[size].url)
         .alt(data.file.alternativeText)
         .render()
 
 const templateImage = ({id, type, data}) => 
-    new Element('img')
-        .id(id)
-        .type(type)
-        .style(activeStyle.image)
+    $Img.id(id).type(type).style(activeStyle.image)
         .src(data.file.url)
         .alt(data.file.alternativeText)
         .render()
 
 const templateList = (listTag) => ({id, type, data}) => 
-    new Element(listTag)
-        .id(id)
-        .type(type)
-        .push(data.items.map(item => new Element('li', '', item)))
-        .render()
+    new Element(listTag).id(id).type(type).push(
+            data.items.map(item => new Element('li', '', item))
+    ).render()
 
 const templateListUnordered = templateList('ul');
 const templateListOrdered = templateList('ol');
 
 const templateEmbed = ({id, type, data}) => 
-    new Element('iframe')
-        .id(id)
-        .type(type)
+    $Iframe.id(id).type(type).height(data.height).width(data.width)
         .src(data.embed)
-        .height(data.height)
-        .width(data.width) //TODO: not working
         .title(data.caption)
         .render()
-        
 
 const templateDelimiter = ({id, type, data}) => 
-    new Element('hr')
-        .id(id)
-        .type(type)
-        .style(activeStyle.delimiter)
-        .render()
+    $Hr.id(id).type(type).style(activeStyle.delimiter).render()
 
 const templateTable = ({id, type, data}) => 
-    new Element('table')
-        .id(id)
-        .type(type)
-        .style(activeStyle.table)
-        .push(
-            data.content.map((row, i) => {
-                const tag = data.withHeadings && i == 0 ? 'th' : 'td'
-                return new Element('tr')
-                    .style(activeStyle.tableRow)
-                    .push(
-                        row.map(column => 
-                            new Element(tag)
-                                .style(activeStyle.tableData)
-                                .push(column)
-                        )
+    $Table.id(id).type(type).style(activeStyle.table).push(
+        data.content.map((row, i) => 
+            $Tr.style(activeStyle.tableRow).push(
+                row.map(column => 
+                    (data.withHeadings && i == 0 ? $Th : $Td).style(activeStyle.tableData).push(
+                        column
                     )
-            })
-        ).render()
+                )
+            )
+        )
+    ).render()
 
 // const templateFlexTable = //TODO FLEX TABLES 
-const templateCode = ({id, type, data}) => new Element('pre').id(id).type(type).push(data.code).render()
-const templateRaw = ({id, type, data}) => new Element('pre').id(id).type(type).push(data.html).render()
+const templateCode = ({id, type, data}) => $Pre.id(id).type(type).push(data.code).render()
+const templateRaw = ({id, type, data}) => $Pre.id(id).type(type).push(data.html).render()
 
 const templateLink = ({id, type, data}) => 
-    new Element('table').id(id).type(type).style(activeStyle.table).push(
-        new Element('tr').push([
-            new Element('td').push([
-                new Element('h3').style(activeStyle.h3).push(
-                    new Element('a').href(data.link).target('_blank').push(data.meta.title)
+    $Table.id(id).type(type).style(activeStyle.table).push(
+        $Tr.push([
+            $Td.push([
+                $H3.style(activeStyle.h3).push(
+                    $A.href(data.link).target('_blank').push(data.meta.title)
                 ),
-                new Element('p').push(data.meta.description),
+                $Paragraph.push(data.meta.description),
             ]),
-            new Element('td').push(
-                new Element('a').href(data.link).target('_blank').push(
-                    new Element('img').src(data.meta.image.url).style(activeStyle.linkImage)
+            $Td.push(
+                $A.href(data.link).target('_blank').push(
+                    $Img.src(data.meta.image.url).style(activeStyle.linkImage)
                 )      
             ),
         ])
     ).render()
 
 const templateChecklist = ({id, type, data}) => 
-    new Division().id(id).type(type).push(
+    $Division.id(id).type(type).push(
         data.items.map((item, i) => 
-            new Paragraph().push([
-                new Element('input').type('checkbox').id(id + i)
-                    .onclick('return false')
-                    .checked(item.checked),
-                new Element('label')
-                    .for(id + i)
-                    .push(item.text)
+            $Paragraph.push([
+                $Input.type('checkbox').id(id + i).onclick('return false').checked(item.checked),
+                $Label.for(id + i).push(item.text)
             ])
         )
     ).render()
 
 const templateDefault = ({id, type, data}) => 
-    new Element('p').push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render();
+    $Paragraph.push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render();
 
 const mapTemplate = ({id, type, data}) => {
     const size = imageSize.large;
@@ -410,7 +367,7 @@ const serverError = (error, res) => {
 app.get('/', (req, res) => {
     setIsMobile(req.get('user-agent'))
 
-    const headHtml = templateHtmlHead({Title: 'Home for my Dome', isMobile});
+    const headHtml = templateHtmlHead({title: 'Home for my Dome', isMobile});
     const titleHtml = templateHome({models: allowedModels})
     const wrappedBodyHtml = templateWrapperBody({content: titleHtml})
     res.send(headHtml + wrappedBodyHtml)
@@ -431,8 +388,8 @@ app.get('/:model', function (req, res) {
 
     getHelper(`https://cms.homeformydome.com/api/${model}?fields=${fields}`).then(
         response => {
-            const headHtml = templateHtmlHead({Title: model, isMobile});
-            const titleHtml = templateTitle({Title: model})
+            const headHtml = templateHtmlHead({title: model, isMobile});
+            const titleHtml = templateTitle({title: model})
             const data = response.data;
             const modelIndexHtml = templateModelIndex({model, data})
             const wrappedBodyHtml = templateWrapperBody({content: titleHtml + modelIndexHtml})
@@ -456,10 +413,10 @@ app.get('/:model/:id', function (req, res) {
 
     getHelper(`https://cms.homeformydome.com/api/${model}/${id}`).then(
         response => {
-            const headHtml = templateHtmlHead({Title: response.data.attributes.Title, isMobile});
+            const headHtml = templateHtmlHead({title: response.data.attributes.Title, isMobile});
             const titleHtml = templateBreadcrumb({
                 id: response.data.id,
-                Title: response.data.attributes.Title,
+                title: response.data.attributes.Title,
                 model,
             })
             const editorJsBody = parseEditorJsBody(response.data.attributes.Body)

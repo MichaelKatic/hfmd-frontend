@@ -67,6 +67,10 @@ class Element {
                 }
 
                 return target[property];
+            },
+            apply(target, thisArg, argumentsList) {
+                console.log(target, thisArg, argumentsList)
+                return target.push(...argumentsList)
             }
             
             //Add array-like indexing
@@ -116,36 +120,37 @@ class Element {
         return this.#attributes
     }
 
-    push = (item) => { 
+    push(item) { 
         if (Array.isArray(item)) {
-            this.#content.push(...item)
+            this.content.push(...item)
         } else {
-            this.#content.push(item)
+            this.content.push(item)
         }
         return this;
     }
 
-    #renderAttributes = () => Object.keys(this.attributes).map(key => {
-        const attribute = this.attributes[key]
+    renderAttributes() { 
+        return Object.keys(this.attributes).map(key => {
+            const attribute = this.attributes[key]
 
-        if (key === 'checked')
-        {
-            return attribute ? key : ''
-        }
+            if (key === 'checked')
+            {
+                return attribute ? key : ''
+            }
 
-        if (attribute === undefined)
-        {
-            return ''
-        }
+            if (attribute === undefined)
+            {
+                return ''
+            }
 
-        return `${key}=${JSON.stringify(attribute)}`
-    }).join(' ')
-    
+            return `${key}=${JSON.stringify(attribute)}`
+        }).join(' ')
+    }    
 
-    #renderContent = (content) => {
+    renderContent(content) {
         content = content || this.content
         if (Array.isArray(content)) {
-            return content.map(item => this.#renderContent(item)).join('')
+            return content.map(item => this.renderContent(item)).join('')
         } else if (content instanceof Element) {
             return content.render()
         } else if (typeof content === 'function') {
@@ -155,11 +160,15 @@ class Element {
         }
     }
         
-    renderStart = () => `<${this.tag} ${this.#renderAttributes()}></$>`
-
-    render = () => this.renderStart() + this.#renderContent() + this.renderEnd()
-
-    renderEnd = () => `</${this.tag}>`
+    renderStart(tag = null) {
+        return `<${tag ?? this.tag} ${this.renderAttributes()}>`
+    }
+    render() {
+        return this.renderStart() + this.renderContent() + this.renderEnd()
+    }
+    renderEnd(tag = null) {
+        return `</${tag ?? this.tag}>`
+    }
 }
 
 class Paragraph extends Element {
@@ -187,28 +196,112 @@ class Body extends Element {
     static renderEnd = () => `</body>`
 }
 
-class Header extends Element {
-    #level = "1"
+class H extends Element {
+    #levelTag = ''
+    #level = 1
 
     constructor(...args) {
-        super('body', ...args)
+        return super('h', ...args)
     }
 
-    level = (newLevel) => {
-        level = newLevel
+    level = (level) => {
+        this.#level = level
+        this.#levelTag = 'h' + this.#level
         return this
     }
 
-    static renderStart = () => `<h${this.#level}>`
+    renderStart() { 
+        return super.renderStart(this.#levelTag) 
+    }
 
-    static renderEnd = () => `</h${this.#level}>`
-
+    renderEnd() { 
+        return super.renderEnd(this.#levelTag) 
+    }
 }
 
-module.exports = {
-    Element,
-    Body,
-    Division,
-    Paragraph,
-    Header,
+const table = new Proxy(this, () => {
+    get(target, property) //tricky way of settting content instead of getting anything
+    {
+        console.log(target, property)
+
+        if (!(property in target)) {
+            return function() {                
+                target.attributes[property] = arguments[0]
+
+                return this
+            }
+        }
+
+        return target[property];
+    }
+});
+
+const elementClassProxy = (tag) => { 
+    return {
+        get(target, property, receiver) {
+            if (!(property in target)) { // access of non-existent static property
+                return function() {
+                    if (tag) {
+                        return new target(tag)[property](...arguments)
+                    } else {
+                        return new target()[property](...arguments)
+                    }
+                    
+                }
+            }
+
+            return target[property];
+        },
+        apply(target, thisArg, argumentsList) {
+            console.log(target, thisArg, argumentsList)
+            if (tag) {
+                return new target(tag).push(...argumentsList)
+            } else {
+                return new target().push(...argumentsList)
+            }
+        }
+    }
 }
+
+const elementProxy = (elementClass, tag = undefined) => new Proxy(elementClass, elementClassProxy(tag))
+
+const defaultProxiesTags = {
+    $A: 'a',
+    $Body: 'div',
+    $Division: 'div',
+    $H1: 'h1',
+    $H2: 'h2',
+    $H3: 'h3',
+    $H4: 'h4',
+    $H5: 'h5',
+    $H6: 'h6',
+    $Head: 'head',
+    $Hr: 'hr',
+    $Iframe: 'iframe',
+    $Img: 'img',
+    $Input: 'input',
+    $Label: 'label',
+    $Li: 'li',
+    $Link: 'link',
+    $Paragraph: 'p',
+    $Pre: 'pre',
+    $Style: 'style',
+    $Table: 'table',
+    $Td: 'td',
+    $Title: 'title',
+    $Tr: 'tr',
+}
+
+exportModules = {Element}
+
+//Generates exports like "exportModules.H1 = elementProxy(Element, 'h1')"
+Object.keys(defaultProxiesTags).forEach(name => {
+    const tag = defaultProxiesTags[name];
+    exportModules[name] = elementProxy(Element, tag)
+})
+
+//Override default proxies
+exportModules.$Paragraph = elementProxy(Paragraph) //Set your own extension of element
+exportModules.$H = elementProxy(H) //Set your own extension of element
+
+module.exports = exportModules
