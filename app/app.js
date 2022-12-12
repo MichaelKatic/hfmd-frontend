@@ -1,7 +1,7 @@
 const dotenv = require('dotenv')
 const https = require('https')
 const express = require('express')
-const { Element, Body, Division, Paragraph } = require('./element/element.js')
+const { Element, Body, Division, Paragraph, Header, Table } = require('./element/element.js')
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 const app = express()
@@ -143,56 +143,44 @@ const imageSize = {
 
 // AMAZING FONT REFERENCE:
 // https://xd.adobe.com/ideas/principles/web-design/best-modern-fonts-for-websites/
-const templateHtmlHead = ({Title, isMobile}) => `
-    <head>
-        <title>${Title}</title>
-        <style>
+const templateHtmlHead = ({Title, isMobile}) => 
+    new Element('head').push([
+        new Element('title').push(Title),
+        new Element('style').push(`
             .intro::first-letter {
                 ${activeStyle.firstLetter}
             }
-        </style>
+        `),
+        new Element('link').rel('stylesheet').type('text/css').href(`/css/style-${isMobile ? 'mobile' : 'desktop'}.css`),
+        new Element('link').rel('stylesheet').type('text/css').href('/css/style.css'),
+        new Element('link').rel('stylesheet').href('https://use.typekit.net/whq2zsc.css'), //Adobe font styles
+        new Element('link').rel('icon').type('image/png').href('/favicon/coffee-16.ico'),
+    ]).render()
 
-        ${isMobile ? 
-            '<link rel="stylesheet" type="text/css" href="/css/style-mobile.css" />'
-        :
-            '<link rel="stylesheet" type="text/css" href="/css/style-desktop.css" />'
-        }
+const templateHome = ({models}) => 
+    new Element('h1')
+        .style(activeStyle.title)
+        .push([
+            templateLogo(),
+            ' Home for my Dome'
+        ]).render() +
+    new Element('h1')
+        .style(activeStyle.h1)
+        .push(
+            models.map(model => 
+                new Element('a')
+                    .href('./' + model)
+                    .target('_self')
+                    .push(model)
+            )
+        ).render()
 
-        <!-- <link rel="stylesheet" type="text/css" href="/element/element.ts" /> -->
-        <!-- <link rel="stylesheet" type="text/css" href="/element/element.js" /> -->        
-
-        <link rel="stylesheet" type="text/css" href="/css/style.css" />
-
-        <link rel="stylesheet" href="https://use.typekit.net/whq2zsc.css"> <!--fonts from adobe-->
-
-        <link rel="icon" type="image/png" href="/favicon/coffee-16.ico">
-    </head>
-`
-const templateHome = ({models}) => `
-    <h1 style="${activeStyle.title}">
-        ${templateLogo()}
-        Home for my Dome
-    </h1>
-    <h1 style="${activeStyle.h1}">
-        ${
-            models.map(
-                model => `<a href="./${model}" target="_self">${model}</a>`
-            ).join('')
-        }
-    </h1>
-`
 const templateWrapperBody = ({content}) => 
     new Body().push(
         new Division().style(activeStyle.wrapper).push(
             content
         )
     ).render()
-
-const templateWrapperBodyAlt1 = ({content}) => {
-    return new Body({content: 
-        new Division({style: activeStyle.wrapper}, content)
-    }).render()
-}
 
 const templateWrapperBodyAlt2 = ({content}) => {
     const div = new Division().style(activeStyle.wrapper)
@@ -203,32 +191,49 @@ const templateWrapperBodyAlt2 = ({content}) => {
 
     return body.render()
 }
-
+    
 const templateModelIndex = ({model, data}) => 
-    data.map(item => 
-        `<h2 style="${activeStyle.h2}"><a href="./${model}/${item.id}" target="_self">${item.attributes.Title}</a></h2>`
+    data.map(item =>
+        new Element('h2')
+            .style(activeStyle.h2)
+            .push(
+                new Element('a')
+                    .href('./' + model + '/' + item.id)
+                    .target('_self')
+                    .push(item.attributes.Title)
+            ).render()
     ).join('')
-const templateLogo = () => `
-    <a href="/" target="_self"">
-        <img src="/images/stewart.png" style="image-rendering: pixelated; height: 1em;">
-    </a>
-`
-const templateBreadcrumb = ({id='', model, Title}) => `
-    <h1 id="${id}" style="${activeStyle.h1}">
-        ${templateLogo()}
-        •
-        <a href="../${model}" target="_self">${model}</a>
-        •
-        ${Title}
-    </h1>
-`
-const templateTitle = ({id, Title}) => `
-    <h1 ${ id ? `id="${id}"` : ''} style="${activeStyle.h1}">
-        ${templateLogo()}
-        •
-        ${Title}
-    </h1>
-`
+
+const templateLogo = () => 
+    new Element('a')
+        .href('/')
+        .target('_self')
+        .push(
+            new Element('img')
+                .src('/images/stewart.png')
+                .style('image-rendering: pixelated; height: 1em;')
+        ).render()
+
+const templateBreadcrumb = ({id='', model, Title}) => 
+    new Element('h1')
+        .id(id)
+        .style(activeStyle.h1)
+        .push([
+            templateLogo(),
+            ' • ',
+            new Element('a').href('../' + model).target('_self').push(model),
+            ' • ',
+            Title,
+        ]).render()
+
+const templateTitle = ({id, Title}) => 
+    new Element('h1')
+        .id(id ?? undefined)
+        .style(activeStyle.h1)
+        .push(
+            templateLogo() + ' • ' + Title 
+        ).render()
+
 const templateParagraph = ({id, type, data}) => 
     new Paragraph()
         .id(id)
@@ -238,12 +243,29 @@ const templateParagraph = ({id, type, data}) =>
         .push(data.text)
         .render()
 
-const templateHeader = ({id, type, data}) => `
-    <h${data.level} id="${data.text}" type="${type}" style="${activeStyle[`h${data.level}`]}">
-        <a href="#${data.text}" target="_self">${data.text}</a>
-    </h${data.level}>
-`
-const templateImageFormat = (size='large') => ({id, type, data}) => `<img id="${id}" type="${type}" style="${activeStyle.image}" src="${data.file.formats[size].url}" alt="${data.file.alternativeText}">`
+const templateHeader = ({id, type, data}) => {
+    const tag = 'h' + data.level
+    return new Element(tag)
+        .id(data.text)
+        .type(type)
+        .style(activeStyle[tag])
+        .push(
+            new Element('a')
+                .href('#' + data.text)
+                .target('_self')
+                .push(data.text)
+        ).render()
+}
+
+const templateImageFormat = (size='large') => ({id, type, data}) => 
+    new Element('img')
+        .id(id)
+        .type(type)
+        .style(activeStyle.image)
+        .src(data.file.formats[size].url)
+        .alt(data.file.alternativeText)
+        .render()
+
 const templateImage = ({id, type, data}) => 
     new Element('img')
         .id(id)
@@ -262,45 +284,70 @@ const templateList = (listTag) => ({id, type, data}) =>
 
 const templateListUnordered = templateList('ul');
 const templateListOrdered = templateList('ol');
-const templateEmbed = ({id, type, data}) => `<iframe id="${id}" type="${type}" src="${data.embed}" height="${data.height}" width="${data.width}" title="${data.caption}"></iframe>`
-const templateDelimiter = ({id, type, data}) => `<hr id="${id}" type="${type}" style="${activeStyle.delimiter}">`
-const templateTable = ({id, type, data}) => `
-    <table id="${id}" type="${type}" style="${activeStyle.table}">
-        ${
+
+const templateEmbed = ({id, type, data}) => 
+    new Element('iframe')
+        .id(id)
+        .type(type)
+        .src(data.embed)
+        .height(data.height)
+        .width(data.width) //TODO: not working
+        .title(data.caption)
+        .render()
+        
+
+const templateDelimiter = ({id, type, data}) => 
+    new Element('hr')
+        .id(id)
+        .type(type)
+        .style(activeStyle.delimiter)
+        .render()
+
+const templateTable = ({id, type, data}) => 
+    new Element('table')
+        .id(id)
+        .type(type)
+        .style(activeStyle.table)
+        .push(
             data.content.map((row, i) => {
                 const tag = data.withHeadings && i == 0 ? 'th' : 'td'
-                return `
-                    <tr style="${activeStyle.tableRow}">
-                        ${row.map(column => `<${tag} style="${activeStyle.tableData}">${column}</${tag}>`, '').join('')}
-                    </tr>
-                `
-            }).join('')
-        }
-    </table>
-`
+                return new Element('tr')
+                    .style(activeStyle.tableRow)
+                    .push(
+                        row.map(column => 
+                            new Element(tag)
+                                .style(activeStyle.tableData)
+                                .push(column)
+                        )
+                    )
+            })
+        ).render()
 
 // const templateFlexTable = //TODO FLEX TABLES 
-const templateCode = ({id, type, data}) => `<pre id="${id}" type="${type}">${data.code}</pre>`
-const templateRaw = ({id, type, data}) => `<pre id="${id}" type="${type}">${data.html}</pre>`
-const templateLink = ({id, type, data}) => `
-    <table id="${id}" type="${type}" style="${activeStyle.table}">
-        <tr> 
-            <td>
-                <h3 style="${activeStyle.h3}"><a href="${data.link}" target="_blank">${data.meta.title}</a></h3>
-                <p>${data.meta.description}</p>
-            </td>
-            <td>
-                <a href="${data.link}" target="_blank"">
-                    <img src="${data.meta.image.url}" style="${activeStyle.linkImage}">
-                </a>
-            </td>
-        </tr> 
-    </table>
-`
+const templateCode = ({id, type, data}) => new Element('pre').id(id).type(type).push(data.code).render()
+const templateRaw = ({id, type, data}) => new Element('pre').id(id).type(type).push(data.html).render()
+
+const templateLink = ({id, type, data}) => 
+    new Element('table').id(id).type(type).style(activeStyle.table).push(
+        new Element('tr').push([
+            new Element('td').push([
+                new Element('h3').style(activeStyle.h3).push(
+                    new Element('a').href(data.link).target('_blank').push(data.meta.title)
+                ),
+                new Element('p').push(data.meta.description),
+            ]),
+            new Element('td').push(
+                new Element('a').href(data.link).target('_blank').push(
+                    new Element('img').src(data.meta.image.url).style(activeStyle.linkImage)
+                )      
+            ),
+        ])
+    ).render()
+
 const templateChecklist = ({id, type, data}) => 
     new Division().id(id).type(type).push(
-        data.items.map((item, i) => {
-            return new Paragraph().push([
+        data.items.map((item, i) => 
+            new Paragraph().push([
                 new Element('input').type('checkbox').id(id + i)
                     .onclick('return false')
                     .checked(item.checked),
@@ -308,13 +355,14 @@ const templateChecklist = ({id, type, data}) =>
                     .for(id + i)
                     .push(item.text)
             ])
-        })
+        )
     ).render()
 
-const mapTemplate = ({id, type, data}) => {
-    const templateDefault = ({id, type, data}) => `<p>id: ${id} type: ${type} data: ${JSON.stringify(data)}</p>`;;
-    const size = imageSize.large;
+const templateDefault = ({id, type, data}) => 
+    new Element('p').push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render();
 
+const mapTemplate = ({id, type, data}) => {
+    const size = imageSize.large;
     switch(type) {
         case 'paragraph': return templateParagraph({id, type, data})
         case 'header': return templateHeader({id, type, data})

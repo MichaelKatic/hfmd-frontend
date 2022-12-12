@@ -126,13 +126,20 @@ class Element {
     }
 
     #renderAttributes = () => Object.keys(this.attributes).map(key => {
+        const attribute = this.attributes[key]
+
         if (key === 'checked')
         {
-            return this.attributes[key] ? key : ''
+            return attribute ? key : ''
         }
 
-        return `${key}=${JSON.stringify(this.attributes[key])}`
-    }).join('')
+        if (attribute === undefined)
+        {
+            return ''
+        }
+
+        return `${key}=${JSON.stringify(attribute)}`
+    }).join(' ')
     
 
     #renderContent = (content) => {
@@ -180,9 +187,28 @@ class Body extends Element {
     static renderEnd = () => `</body>`
 }
 
+class Header extends Element {
+    #level = "1"
+
+    constructor(...args) {
+        super('body', ...args)
+    }
+
+    level = (newLevel) => {
+        level = newLevel
+        return this
+    }
+
+    static renderStart = () => `<h${this.#level}>`
+
+    static renderEnd = () => `</h${this.#level}>`
+
+}
+
 module.exports = {
     Element,
     Body,
     Division,
     Paragraph,
+    Header,
 }
