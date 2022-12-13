@@ -1,12 +1,12 @@
 const dotenv = require('dotenv')
 const https = require('https')
 const express = require('express')
-// const e = require('./element/element.js')
+// const e = require('./element/element.js') // Alt way of import to spam less. 
 const { 
     Element, 
     $A,
     $Body,
-    $Division,
+    $Div,
     $H,
     $H1,
     $H2,
@@ -22,7 +22,7 @@ const {
     $Label,
     $Li,
     $Link,
-    $Paragraph,
+    $P,
     $Pre,
     $Style,
     $Table,
@@ -136,13 +136,9 @@ const applyFontMultiplier = (style, multiplier) => {
     return style
 }
 
-const removeMaxWidth = (style) => {
-    return style.replace('max-width:[\s]*\d*\.?\d+px;', '');
-}
-
 const mobileStyles = JSON.parse(JSON.stringify(styles))
 Object.keys(mobileStyles).forEach(key => mobileStyles[key] = applyFontMultiplier(mobileStyles[key], 2))
-// mobileStyles.wrapper = removeMaxWidth(mobileStyles.wrapper)
+
 mobileStyles.wrapper = `
         width: 95%; 
         text-size-adjust: none;
@@ -172,9 +168,9 @@ const imageSize = {
 // AMAZING FONT REFERENCE:
 // https://xd.adobe.com/ideas/principles/web-design/best-modern-fonts-for-websites/
 const templateHtmlHead = ({title, isMobile}) => 
-    $Head.push([
-        $Title.push(title),
-        $Style.push(`
+    $Head([
+        $Title(title),
+        $Style(`
             .intro::first-letter {
                 ${activeStyle.firstLetter}
             }
@@ -186,18 +182,16 @@ const templateHtmlHead = ({title, isMobile}) =>
     ]).render()
 
 const templateHome = ({models}) => 
-    $H1.style(activeStyle.title).push([templateLogo(), ' Home for my Dome']).render() +
-    $H1.style(activeStyle.h1).push(
+    $H1([templateLogo(), ' Home for my Dome']).style(activeStyle.title).render() +
+    $H1(
         models.map(model => 
-            $A.href('./' + model).target('_self').push(model)
+            $A(model).href('./' + model).target('_self')
         )
-    ).render()
+    ).style(activeStyle.h1).render()
 
 const templateWrapperBody = ({content}) => 
-    $Body.push(
-        $Division.style(activeStyle.wrapper).push(
-            content
-        )
+    $Body(
+        $Div(content).style(activeStyle.wrapper)
     ).render()
     
 const templateModelIndex = ({model, data}) => 
@@ -229,7 +223,7 @@ const templateTitle = ({id, title}) =>
     ).render()
 
 const templateParagraph = ({id, type, data}) => 
-    $Paragraph.id(id).type(type).style(activeStyle.paragraph).class(data.into ? 'intro' : undefined).push(
+    $P.id(id).type(type).style(activeStyle.paragraph).class(data.into ? 'intro' : undefined).push(
         data.text
     ).render()
 
@@ -256,7 +250,7 @@ const templateImage = ({id, type, data}) =>
 
 const templateList = (listTag) => ({id, type, data}) => 
     new Element(listTag).id(id).type(type).push(
-            data.items.map(item => new Element('li', '', item))
+            data.items.map(item => $Li(item))
     ).render()
 
 const templateListUnordered = templateList('ul');
@@ -290,25 +284,25 @@ const templateRaw = ({id, type, data}) => $Pre.id(id).type(type).push(data.html)
 
 const templateLink = ({id, type, data}) => 
     $Table.id(id).type(type).style(activeStyle.table).push(
-        $Tr.push([
-            $Td.push([
+        $Tr([
+            $Td([
                 $H3.style(activeStyle.h3).push(
                     $A.href(data.link).target('_blank').push(data.meta.title)
                 ),
-                $Paragraph.push(data.meta.description),
+                $P(data.meta.description),
             ]),
-            $Td.push(
+            $Td(
                 $A.href(data.link).target('_blank').push(
                     $Img.src(data.meta.image.url).style(activeStyle.linkImage)
-                )      
+                )
             ),
         ])
     ).render()
 
 const templateChecklist = ({id, type, data}) => 
-    $Division.id(id).type(type).push(
+    $Div.id(id).type(type).push(
         data.items.map((item, i) => 
-            $Paragraph.push([
+            $P([
                 $Input.type('checkbox').id(id + i).onclick('return false').checked(item.checked),
                 $Label.for(id + i).push(item.text)
             ])
@@ -316,7 +310,7 @@ const templateChecklist = ({id, type, data}) =>
     ).render()
 
 const templateDefault = ({id, type, data}) => 
-    $Paragraph.push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render();
+    $P.push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render();
 
 const mapTemplate = ({id, type, data}) => {
     const size = imageSize.large;

@@ -1,7 +1,6 @@
-//Maybe include attributes somwhere
-// https://www.w3schools.com/tags/ref_attributes.asp
-
 class Element {
+    //Maybe include attributes somwhere
+    // https://www.w3schools.com/tags/ref_attributes.asp
     #attributes = {}
     #content = []
     #tag = 'undefined'
@@ -45,21 +44,23 @@ class Element {
         this.content = content
 
         const proxyHandler = {
-            // set(target, property, value) {
-
-            // },
             get(target, property) //tricky way of settting content instead of getting anything
             {
                 if (!(property in target)) {
                     return function() {
-                        let value = arguments[0] //Only allow one param. Ignore other for now. Could create attribute handler methods or sumpin
+                        let attributeValue = arguments[0] //Only allow one param. Ignore other for now. Could create attribute handler methods or sumpin
                         
-                        if (property === 'style')
-                        {
-                            value = value.replace(/[\s\n]+/g, ' ')
+                        if (property === 'style') {
+                            if (typeof attributeValue === 'string') {
+                                attributeValue = attributeValue.replace(/[\s\n]+/g, ' ') //Remove extra whitespace
+                            } else if (typeof attributeValue === 'object') {
+                                attributeValue = Object.keys(attributeValue).map(styleKey => 
+                                    styleKey + ': ' + attributeValue[styleKey]
+                                ).join('; ')
+                            }
                         }
 
-                        target.attributes[property] = value
+                        target.attributes[property] = attributeValue
 
                         return this
                         // target[ property ].apply( target, arguments ); //call original function
@@ -68,10 +69,12 @@ class Element {
 
                 return target[property];
             },
-            apply(target, thisArg, argumentsList) {
-                console.log(target, thisArg, argumentsList)
-                return target.push(...argumentsList)
-            }
+
+            //SHITE, CANT HAVE APPLY ON CLASS :( Maybe convert to a function :( :(
+            // apply(target, thisArg, argumentsList) {
+            //     console.log(target, thisArg, argumentsList)
+            //     return thisArg.push(...argumentsList)
+            // }
             
             //Add array-like indexing
             // get(target, prop) {
@@ -82,6 +85,7 @@ class Element {
             // }
         }
 
+        // this.__proto__.call = () => {console.log('prototype call!')}
         return new Proxy(this, proxyHandler);
     }
 
@@ -130,7 +134,7 @@ class Element {
     }
 
     renderAttributes() { 
-        return Object.keys(this.attributes).map(key => {
+        return (Object.keys(this.attributes).map(key => {
             const attribute = this.attributes[key]
 
             if (key === 'checked')
@@ -144,7 +148,7 @@ class Element {
             }
 
             return `${key}=${JSON.stringify(attribute)}`
-        }).join(' ')
+        }).join(' '));
     }    
 
     renderContent(content) {
@@ -152,6 +156,10 @@ class Element {
         if (Array.isArray(content)) {
             return content.map(item => this.renderContent(item)).join('')
         } else if (content instanceof Element) {
+            return content.render()
+        } else if (content.prototype === Element.prototype) {
+            return content.render()
+        } else if (content.hasOwnProperty('prototype') && new content() instanceof Element) {
             return content.render()
         } else if (typeof content === 'function') {
             return content()
@@ -161,7 +169,7 @@ class Element {
     }
         
     renderStart(tag = null) {
-        return `<${tag ?? this.tag} ${this.renderAttributes()}>`
+        return `<${(tag ?? this.tag + ' ' + this.renderAttributes()).trim()}>`
     }
     render() {
         return this.renderStart() + this.renderContent() + this.renderEnd()
@@ -170,30 +178,15 @@ class Element {
         return `</${tag ?? this.tag}>`
     }
 }
+// Element.prototype.call = () => {} //Enables proxy to capture calls to instances of this class. 
+// MyClass.prototype.call = () => {console.log('MyClass call')}
 
 class Paragraph extends Element {
     constructor(...args) {
-        // super(Element.types[typeof(this)], attributes, content)
         super('p', ...args)
     }
 
-    static renderEnd = () => `</p>`
-}
-
-class Division extends Element {
-    constructor(...args) {
-        super('div', ...args)
-    }
-
-    static renderEnd = () => `</div>`
-}
-
-class Body extends Element {
-    constructor(...args) {
-        super('body', ...args)
-    }
-
-    static renderEnd = () => `</body>`
+    //Extend funcitonality if you please. 
 }
 
 class H extends Element {
@@ -222,7 +215,7 @@ class H extends Element {
 const table = new Proxy(this, () => {
     get(target, property) //tricky way of settting content instead of getting anything
     {
-        console.log(target, property)
+        // console.log(target, property)
 
         if (!(property in target)) {
             return function() {                
@@ -253,7 +246,7 @@ const elementClassProxy = (tag) => {
             return target[property];
         },
         apply(target, thisArg, argumentsList) {
-            console.log(target, thisArg, argumentsList)
+            // console.log(target, thisArg, argumentsList)
             if (tag) {
                 return new target(tag).push(...argumentsList)
             } else {
@@ -268,7 +261,7 @@ const elementProxy = (elementClass, tag = undefined) => new Proxy(elementClass, 
 const defaultProxiesTags = {
     $A: 'a',
     $Body: 'div',
-    $Division: 'div',
+    $Div: 'div',
     $H1: 'h1',
     $H2: 'h2',
     $H3: 'h3',
@@ -283,7 +276,7 @@ const defaultProxiesTags = {
     $Label: 'label',
     $Li: 'li',
     $Link: 'link',
-    $Paragraph: 'p',
+    $P: 'p',
     $Pre: 'pre',
     $Style: 'style',
     $Table: 'table',
@@ -301,7 +294,12 @@ Object.keys(defaultProxiesTags).forEach(name => {
 })
 
 //Override default proxies
-exportModules.$Paragraph = elementProxy(Paragraph) //Set your own extension of element
+exportModules.$P = elementProxy(Paragraph) //Set your own extension of element
 exportModules.$H = elementProxy(H) //Set your own extension of element
 
 module.exports = exportModules
+
+makeGlobal = false
+if (makeGlobal){
+    Object.keys(exportModules).forEach(key => window[key] = exportModules[key])
+}
