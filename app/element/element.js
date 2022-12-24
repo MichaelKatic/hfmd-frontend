@@ -33,12 +33,6 @@ class Element {
             content = []
         }
 
-        //TO make this abstract
-        // if(this.constructor === Element){
-        //     throw new Error("You cannot create an instance of     Abstract Class");
-        //     }
-        // };
-
         this.tag = tag;
         this.attributes = attributes;
         this.content = content
@@ -71,10 +65,10 @@ class Element {
             },
 
             //SHITE, CANT HAVE APPLY ON CLASS :( Maybe convert to a function :( :(
-            // apply(target, thisArg, argumentsList) {
-            //     console.log(target, thisArg, argumentsList)
-            //     return thisArg.push(...argumentsList)
-            // }
+            apply(target, thisArg, argumentsList) {
+                console.log(target, thisArg, argumentsList)
+                return thisArg.push(...argumentsList)
+            }
             
             //Add array-like indexing
             // get(target, prop) {
@@ -177,13 +171,37 @@ class Element {
     renderEnd(tag = null) {
         return `</${tag ?? this.tag}>`
     }
+
+    renderPretty() {
+        var tab = '\t';
+        var result = '';
+        var indent= '';
+    
+        this.render().split(/>\s*</).forEach(function(element) {
+            if (element.match( /^\/\w/ )) {
+                indent = indent.substring(tab.length);
+            }
+    
+            result += indent + '<' + element + '>\r\n';
+    
+            if (element.match( /^<?\w[^>]*[^\/]$/ ) && !element.startsWith("input")  ) { 
+                indent += tab;              
+            }
+        });
+    
+        return result.substring(1, result.length-3);
+    }
+
+    html() {
+        let templateString = this.render()
+    	  return new DOMParser().parseFromString(templateString, 'text/html').body;
+    };
 }
-// Element.prototype.call = () => {} //Enables proxy to capture calls to instances of this class. 
-// MyClass.prototype.call = () => {console.log('MyClass call')}
+Element.prototype.call = () => {} //Enables proxy to capture calls to instances of this class. 
 
 class Paragraph extends Element {
     constructor(...args) {
-        super('p', ...args)
+        return super('p', ...args)
     }
 
     //Extend funcitonality if you please. 
@@ -260,7 +278,7 @@ const elementProxy = (elementClass, tag = undefined) => new Proxy(elementClass, 
 
 const defaultProxiesTags = {
     $A: 'a',
-    $Body: 'div',
+    $Body: 'body',
     $Div: 'div',
     $H1: 'h1',
     $H2: 'h2',
@@ -287,7 +305,7 @@ const defaultProxiesTags = {
 
 exportModules = {Element}
 
-//Generates exports like "exportModules.H1 = elementProxy(Element, 'h1')"
+//Generates exports like "exportModules.$H1 = elementProxy(Element, 'h1')"
 Object.keys(defaultProxiesTags).forEach(name => {
     const tag = defaultProxiesTags[name];
     exportModules[name] = elementProxy(Element, tag)
