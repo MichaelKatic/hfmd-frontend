@@ -1,4 +1,4 @@
-const _ = require('./lodash/core.js')
+// const _ = require('./lodash/core.js')
 
 class State {
     static get instance() { 
@@ -49,24 +49,40 @@ class State {
 
         const previousValue =  _.get(State.instance.state, path)
         if (previousValue !== value) {
-            //State changed trigger callback subscriptions
-            if (_.has(State.instance.subs, path)) { //TODO: trigger all callbacks in path heirachry. If path is test.foo, call subs.test.foo() and subs.test()
-                _.get(State.instance.subs, path).forEach(callback => {
-                    callback(value, previousValue, path)
-                })
-            }
             //Update the state
             if (hasValue) {
                 _.set(State.instance.state, path, value)
             } else {
                 State.instance.state = value
             }
+
+            //State changed trigger callback subscriptions
+            const pathArray = path.split(/(?=[\.,[])/g) // convert 'cms.api[9].blogs.2' to ['cms', '.api', '[9]', '.blogs', '.2']
+            while (pathArray.length > 0) { //Find all callbacks in path heirarchy
+                const subPath = pathArray.join('')
+                pathArray.pop()
+                if (_.has(State.instance.subs, subPath)) {
+                    const pathValue = _.get(State.instance.subs, subPath)
+                    if (Array.isArray(pathValue)) {
+                        pathValue.forEach(callback => {
+                            if (typeof(callback) === 'function') {
+                                const valueInState = _.get(State.instance.state, subPath)
+                                const relativePath = path.substring(subPath.length + 1)
+                                const previousValueInState = JSON.parse(JSON.stringify(valueInState));
+                                _.set(previousValueInState, relativePath, previousValue)
+                                // callback(value, previousValue, path) //previous value broken
+                                callback(valueInState, previousValueInState, path, relativePath)
+                            }
+                        })
+                    }
+                }
+            }
         }
     }
 
     get(path='') {
         if (path !== '') {
-            return _.get(State.instance.state, path, obj)
+            return _.get(State.instance.state, path)
         } else {
             return State.instance.state
         }
@@ -86,6 +102,4 @@ class State {
     }
 }
 
-module.exports = {
-    state: () => State.instance
-}
+export function state() { return State.instance }

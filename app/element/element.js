@@ -213,10 +213,6 @@ class Element {
         let templateString = this.render()
     	  return new DOMParser().parseFromString(templateString, 'text/html').body;
     };
-
-    static html(templateString) {
-        return new DOMParser().parseFromString(templateString, 'text/html').body;
-    }
 }
 Element.prototype.call = () => {} //Enables proxy to capture calls to instances of this class. 
 

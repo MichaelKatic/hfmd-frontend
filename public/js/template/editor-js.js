@@ -1,7 +1,5 @@
-const {  
-    Element,  $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr
-} = require('../element/element.js')
-const { state } = require('../state.js')
+import { Element, $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr } from '../element/element.js'
+import { state } from '../state.js'
 
 const paragraph = ({id, type, data}) => 
     $P.id(id).type(type).style(state().activeStyle.paragraph).class(data.into ? 'intro' : undefined).push(
@@ -90,7 +88,7 @@ const checklist = ({id, type, data}) =>
         )
     ).render()
 
-module.exports = {
+export default {
     paragraph,
     header,
     imageFormat,

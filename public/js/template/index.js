@@ -1,7 +1,7 @@
-const editorJs = require('./editor-js.js')
-const site = require('./site.js')
+import editorJs from './editor-js.js'
+import site from './site.js'
 
-module.exports = {
+export {
     editorJs,
     site
 }

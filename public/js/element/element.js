@@ -195,7 +195,11 @@ class Element {
     html() {
         let templateString = this.render()
     	  return new DOMParser().parseFromString(templateString, 'text/html').body;
-    };
+    }
+
+    static html(templateString) {
+        return new DOMParser().parseFromString(templateString, 'text/html').body;
+    }
 }
 Element.prototype.call = () => {} //Enables proxy to capture calls to instances of this class. 
 
@@ -230,22 +234,22 @@ class H extends Element {
     }
 }
 
-const table = new Proxy(this, () => {
-    get(target, property) //tricky way of settting content instead of getting anything
-    {
-        // console.log(target, property)
+// const table = new Proxy(this, () => {
+//     get(target, property) //tricky way of settting content instead of getting anything
+//     {
+//         // console.log(target, property)
 
-        if (!(property in target)) {
-            return function() {                
-                target.attributes[property] = arguments[0]
+//         if (!(property in target)) {
+//             return function() {                
+//                 target.attributes[property] = arguments[0]
 
-                return this
-            }
-        }
+//                 return this
+//             }
+//         }
 
-        return target[property];
-    }
-});
+//         return target[property];
+//     }
+// });
 
 const elementClassProxy = (tag) => { 
     return {
@@ -304,21 +308,82 @@ const defaultProxiesTags = {
     $Tr: 'tr',
 }
 
-exportModules = {Element}
+//Defaults
+let $A = elementProxy(Element, 'a')
+let $Body = elementProxy(Element, 'body')
+let $Div = elementProxy(Element, 'div')
+let $H1 = elementProxy(Element, 'h1')
+let $H2 = elementProxy(Element, 'h2')
+let $H3 = elementProxy(Element, 'h3')
+let $H4 = elementProxy(Element, 'h4')
+let $H5 = elementProxy(Element, 'h5')
+let $H6 = elementProxy(Element, 'h6')
+let $Head = elementProxy(Element, 'head')
+let $Hr = elementProxy(Element, 'hr')
+let $Iframe = elementProxy(Element, 'iframe')
+let $Img = elementProxy(Element, 'img')
+let $Input = elementProxy(Element, 'input')
+let $Label = elementProxy(Element, 'label')
+let $Li = elementProxy(Element, 'li')
+let $Link = elementProxy(Element, 'link')
+let $P = elementProxy(Element, 'link')
+let $Pre = elementProxy(Element, 'pre')
+let $Script = elementProxy(Element, 'script')
+let $Style = elementProxy(Element, 'style')
+let $Table = elementProxy(Element, 'table')
+let $Td = elementProxy(Element, 'td')
+let $Title = elementProxy(Element, 'title')
+let $Tr = elementProxy(Element, 'tr')
 
-//Generates exports like "exportModules.$H1 = elementProxy(Element, 'h1')"
-Object.keys(defaultProxiesTags).forEach(name => {
-    const tag = defaultProxiesTags[name];
-    exportModules[name] = elementProxy(Element, tag)
-})
+//Extended
+let $H = elementProxy(H)
+$P = elementProxy(Paragraph)
 
-//Override default proxies
-exportModules.$P = elementProxy(Paragraph) //Set your own extension of element
-exportModules.$H = elementProxy(H) //Set your own extension of element
+// const exportModules = {Element}
 
-module.exports = exportModules
+// //Generates exports like "exportModules.$H1 = elementProxy(Element, 'h1')"
+// Object.keys(defaultProxiesTags).forEach(name => {
+//     const tag = defaultProxiesTags[name];
+//     exportModules[name] = elementProxy(Element, tag)
+// })
 
-makeGlobal = false
-if (makeGlobal){
-    Object.keys(exportModules).forEach(key => window[key] = exportModules[key])
+// //Override default proxies
+// exportModules.$P = elementProxy(Paragraph) //Set your own extension of element
+// exportModules.$H = elementProxy(H) //Set your own extension of element
+
+// export exportModules
+
+export {
+    Element,
+    $A,
+    $Body,
+    $Div,
+    $H,
+    $H1,
+    $H2,
+    $H3,
+    $H4,
+    $H5,
+    $H6,
+    $Head,
+    $Hr,
+    $Iframe,
+    $Img,
+    $Input,
+    $Label,
+    $Li,
+    $Link,
+    $P,
+    $Pre,
+    $Script,
+    $Style,
+    $Table,
+    $Td,
+    $Title,
+    $Tr,
 }
+
+// makeGlobal = false
+// if (makeGlobal){
+//     Object.keys(exportModules).forEach(key => window[key] = exportModules[key])
+// }

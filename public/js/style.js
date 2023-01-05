@@ -49,10 +49,10 @@ const applyFontMultiplier = (style, multiplier) => {
     return style
 }
 
-const mobileStyles = JSON.parse(JSON.stringify(styles))
-Object.keys(mobileStyles).forEach(key => mobileStyles[key] = applyFontMultiplier(mobileStyles[key], 2))
+const mobileStyle = JSON.parse(JSON.stringify(styles))
+Object.keys(mobileStyle).forEach(key => mobileStyle[key] = applyFontMultiplier(mobileStyle[key], 2))
 
-mobileStyles.wrapper = `
+mobileStyle.wrapper = `
         width: 95%; 
         text-size-adjust: none;
         object-fit: contain; 
@@ -64,7 +64,7 @@ mobileStyles.wrapper = `
     `
 let activeStyle = {}
 
-module.exports = {
-    defaultStyle: styles,
-    mobileStyle: mobileStyles
+export {
+    styles as defaultStyle,
+    mobileStyle 
 }

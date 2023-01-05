@@ -1,7 +1,7 @@
-const jq = require('./jq/core.js')
+// import jq from './jq/core.js';
 
 const get = (url) => new Promise((resolve, reject) => {
-    xhttp = new XMLHttpRequest();
+    const xhttp = new XMLHttpRequest();
     xhttp.open('GET', url, false);
     xhttp.send();
     resolve(JSON.parse(xhttp.responseText));
@@ -67,6 +67,6 @@ const get = (url) => new Promise((resolve, reject) => {
     // });
 });
 
-module.exports = {
+export {
     get
 }

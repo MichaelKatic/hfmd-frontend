@@ -79,6 +79,7 @@ const setIsMobile = (userAgent) => {
     state.set('isMobile', isMobile)
     state.set('activeStyle', isMobile ? mobileStyle : defaultStyle)
 }
+
 const serverError = (error, res) => {
     res.status(500).send(error.status + " " + error.message) //TODO user friendly errors
 }
