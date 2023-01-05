@@ -1,17 +1,16 @@
-// const e = require('./element/element.js') // Alt way of import to spam less. 
 const {  
     Element,  $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr
 } = require('../element/element.js')
 const { state } = require('../state.js')
 
 const paragraph = ({id, type, data}) => 
-    $P.id(id).type(type).style(state.activeStyle.paragraph).class(data.into ? 'intro' : undefined).push(
+    $P.id(id).type(type).style(state().activeStyle.paragraph).class(data.into ? 'intro' : undefined).push(
         data.text
     ).render()
 
 const header = ({id, type, data}) => {
     const tag = 'h' + data.level
-    return new $H.level(data.level).id(data.text).type(type).style(state.activeStyle[tag]).push(
+    return new $H.level(data.level).id(data.text).type(type).style(state().activeStyle[tag]).push(
         $A.href('#' + data.text).target('_self').push(
             data.text
         )
@@ -19,13 +18,13 @@ const header = ({id, type, data}) => {
 }
 
 const imageFormat = (size='large') => ({id, type, data}) => 
-    $Img.id(id).type(type).style(state.activeStyle.image)
+    $Img.id(id).type(type).style(state().activeStyle.image)
         .src(data.file.formats[size].url)
         .alt(data.file.alternativeText)
         .render()
 
 const image = ({id, type, data}) => 
-    $Img.id(id).type(type).style(state.activeStyle.image)
+    $Img.id(id).type(type).style(state().activeStyle.image)
         .src(data.file.url)
         .alt(data.file.alternativeText)
         .render()
@@ -45,14 +44,14 @@ const embed = ({id, type, data}) =>
         .render()
 
 const delimiter = ({id, type, data}) => 
-    $Hr.id(id).type(type).style(state.activeStyle.delimiter).render()
+    $Hr.id(id).type(type).style(state().activeStyle.delimiter).render()
 
 const table = ({id, type, data}) => 
-    $Table.id(id).type(type).style(state.activeStyle.table).push(
+    $Table.id(id).type(type).style(state().activeStyle.table).push(
         data.content.map((row, i) => 
-            $Tr.style(state.activeStyle.tableRow).push(
+            $Tr.style(state().activeStyle.tableRow).push(
                 row.map(column => 
-                    (data.withHeadings && i == 0 ? $Th : $Td).style(state.activeStyle.tableData).push(
+                    (data.withHeadings && i == 0 ? $Th : $Td).style(state().activeStyle.tableData).push(
                         column
                     )
                 )
@@ -65,17 +64,17 @@ const code = ({id, type, data}) => $Pre.id(id).type(type).push(data.code).render
 const raw = ({id, type, data}) => $Pre.id(id).type(type).push(data.html).render()
 
 const link = ({id, type, data}) => 
-    $Table.id(id).type(type).style(state.activeStyle.table).push(
+    $Table.id(id).type(type).style(state().activeStyle.table).push(
         $Tr([
             $Td([
-                $H3.style(state.activeStyle.h3).push(
+                $H3.style(state().activeStyle.h3).push(
                     $A.href(data.link).target('_blank').push(data.meta.title)
                 ),
                 $P(data.meta.description),
             ]),
             $Td(
                 $A.href(data.link).target('_blank').push(
-                    $Img.src(data.meta.image.url).style(state.activeStyle.linkImage)
+                    $Img.src(data.meta.image.url).style(state().activeStyle.linkImage)
                 )
             ),
         ])

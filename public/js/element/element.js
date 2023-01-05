@@ -147,17 +147,8 @@ class Element {
 
     renderContent(content) {
         content = content || this.content
-        if (isPromise(content)) {
-            return new Promise(resolve => content.then(contentResult => resolve(this.renderContent(contentResult))))
-        } else if (Array.isArray(content)) {
-            if (hasPromise(content)) {
-                return new Promise(resolve => {
-                    Promise.all(content.map(item => this.renderContent(item)))
-                        .then(items => resolve(items.join('')))
-                })
-            } else {
-                return content.map(item => this.renderContent(item)).join('')
-            }
+        if (Array.isArray(content)) {
+            return content.map(item => this.renderContent(item)).join('')
         } else if (content instanceof Element) {
             return content.render()
         } else if (content.prototype === Element.prototype) {
@@ -175,15 +166,7 @@ class Element {
         return `<${(tag ?? this.tag + ' ' + this.renderAttributes()).trim()}>`
     }
     render() {
-        const renderedContent = this.renderContent()
-
-        if (isPromise(renderedContent)) {
-            return new Promise(resolve => {
-                renderedContent.then(result => resolve(this.renderStart() + result + this.renderEnd()))
-            })
-        }
-
-        return this.renderStart() + renderedContent + this.renderEnd()
+        return this.renderStart() + this.renderContent() + this.renderEnd()
     }
     renderEnd(tag = null) {
         return `</${tag ?? this.tag}>`
@@ -213,10 +196,6 @@ class Element {
         let templateString = this.render()
     	  return new DOMParser().parseFromString(templateString, 'text/html').body;
     };
-
-    static html(templateString) {
-        return new DOMParser().parseFromString(templateString, 'text/html').body;
-    }
 }
 Element.prototype.call = () => {} //Enables proxy to capture calls to instances of this class. 
 
@@ -292,19 +271,6 @@ const elementClassProxy = (tag) => {
                 return new target().push(...argumentsList)
             }
         }
-    }
-}
-
-const isPromise = obj => 
-    typeof obj === 'object' && 
-    typeof obj.then === 'function' && 
-    typeof obj.catch === 'function' &&
-    obj.__isProxy === undefined //Proxies are promises but we don't care.
-const hasPromise = obj => {
-    if (Array.isArray(obj)) {
-        return obj.find(item => hasPromise(item))
-    } else {
-        return isPromise(obj)
     }
 }
 

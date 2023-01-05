@@ -1,4 +1,5 @@
 const express = require('express')
+const path = require('path')
 const cms = require('./hfmd-cms.js')
 const template = require('./template/index.js')
 const { state } = require('./state.js')
@@ -76,7 +77,7 @@ const allowedModels = ['blogs']
 const setIsMobile = (userAgent) => {
     isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
     state.set('isMobile', isMobile)
-    state.set('activeStyle', isMobile ? mobileStyle : defaultStyle, true)
+    state.set('activeStyle', isMobile ? mobileStyle : defaultStyle)
 }
 const serverError = (error, res) => {
     res.status(500).send(error.status + " " + error.message) //TODO user friendly errors
@@ -117,7 +118,50 @@ app.get('/:model', function (req, res) {
     )
 })
 
-app.get('/:model/:id', function (req, res) {
+// const allowedNodeModules = [
+//     'clientside-require/dist/bundle.js',
+//     'https/package.json',
+//     'lodash/package.json ',
+//     'fs/package.json',
+//     'lodash/package.json',
+// ]
+
+const allowedNodeModules = [
+    // 'util', // Not sure what is requiring this. 
+    'clientside-require',
+    // 'node:https',
+    // 'lodash',
+    // 'jquery',
+    // 'fs',
+]
+
+//js/template/element/element.js 
+
+app.get('/node_modules/:nodeModule/:nodePath(*)', function (req, res) {
+    const nodeModule = req.params.nodeModule
+    const nodePath = req.params.nodePath
+
+    if (nodeModule.includes('node:'))
+    {
+        //Fucked   
+    }
+
+    if (!allowedNodeModules.includes(nodeModule))
+    {
+        res.status(401).send("Unauthorized")
+        return
+    }
+
+    res.sendFile(req.url, {root: path.join(__dirname, '../')}, function (err) {
+        if (err) {
+            res.status(404).send("Not found")
+        } else {
+            console.log('Sent:', req.url);
+        }
+    })
+})
+
+app.get('/:model/:id', async function (req, res) {
     const model = req.params.model
     const id = req.params.id
 
@@ -129,25 +173,57 @@ app.get('/:model/:id', function (req, res) {
 
     setIsMobile(req.get('user-agent'))
 
-    cms.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
-        response => {
-            const headHtml = template.site.htmlHead({title: response.data.attributes.Title, isMobile});
-            const titleHtml = template.site.breadcrumb({
-                id: response.data.id,
-                title: response.data.attributes.Title,
-                model,
-            })
-            const editorJsBody = parseEditorJsBody(response.data.attributes.Body)
-            const bodyHtml = renderEditorJs(editorJsBody.blocks)
-            const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + bodyHtml})
-            res.send(headHtml + wrappedBodyHtml)
-        },
-        error => serverError(error, res)
-    )
+    requestPath = `https://cms.homeformydome.com/api/${model}/${id}`
+    statePath = `cms.api.${model}.${id}`
+
+    template.site.htmlHead({title: 'client side rendering test', isMobile}).then(headHtml => {
+        res.send(headHtml)
+    })
+
+    // const headHtml = await template.site.htmlHead({title: 'client side rendering test', isMobile})
+    // res.send(headHtml)
+
+    //------------------------------------------
+
+    // cms.get(requestPath).then(
+    //     response => state.set(statePath, response.data),
+    //     error => serverError(error, res)
+    // )
+
+    // state.sub(statePath, (value, previousValue, path) => {
+    //     const headHtml = template.site.htmlHead({title: value.attributes.Title, isMobile});
+    //     const titleHtml = template.site.breadcrumb({
+    //         id: value.id,
+    //         title: value.attributes.Title,
+    //         model,
+    //     })
+    //     const editorJsBody = parseEditorJsBody(value.attributes.Body)
+    //     const bodyHtml = renderEditorJs(editorJsBody.blocks)
+    //     const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + bodyHtml})
+    //     res.send(headHtml + wrappedBodyHtml)
+    // })
+
+    //------------------------------------------
+
+    // cms.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
+    //     response => {
+    //         const headHtml = template.site.htmlHead({title: response.data.attributes.Title, isMobile});
+    //         const titleHtml = template.site.breadcrumb({
+    //             id: response.data.id,
+    //             title: response.data.attributes.Title,
+    //             model,
+    //         })
+    //         const editorJsBody = parseEditorJsBody(response.data.attributes.Body)
+    //         const bodyHtml = renderEditorJs(editorJsBody.blocks)
+    //         const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + bodyHtml})
+    //         res.send(headHtml + wrappedBodyHtml)
+    //     },
+    //     error => serverError(error, res)
+    // )
 })
 
 app.get('/:model/:id/raw', function (req, res) {
-    const model = req.params.model
+        const model = req.params.model
     const id = req.params.id
 
     if (!allowedModels.includes(model))
@@ -159,11 +235,30 @@ app.get('/:model/:id/raw', function (req, res) {
     cms.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
         response => {
             response.data.attributes.Body = parseEditorJsBody(response.data.attributes.Body)
-            res.send(response)
+            res.json(response)
         },
         error => serverError(error, res)
     )
 })
+
+// app.get('cms/:model/:id', function (req, res) {
+//     const model = req.params.model
+//     const id = req.params.id
+
+//     if (!allowedModels.includes(model))
+//     {
+//         res.status(401).send("Unauthorized")
+//         return
+//     }
+
+//     cms.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
+//         response => {
+//             response.data.attributes.Body = parseEditorJsBody(response.data.attributes.Body)
+//             res.json(response)
+//         },
+//         error => serverError(error, res)
+//     )
+// })
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
