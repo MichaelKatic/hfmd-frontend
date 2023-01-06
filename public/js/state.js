@@ -1,12 +1,22 @@
 // const _ = require('./lodash/core.js')
 
 class State {
-    static get instance() { 
-        if (window.stateinstance === undefined)
-        {
-            window.stateinstance = new State()
+    static get instance() {
+        let globalSpace; 
+
+        if (typeof(window) === 'undefined') {
+            //node environment
+            globalSpace = global;
+        } else {
+            //browser environment
+            globalSpace = window;
         }
-        return window.stateinstance 
+
+        if (globalSpace.state === undefined)
+        {
+            globalSpace.state = new State()
+        }
+        return globalSpace.state 
     }
 
     state = {}
@@ -102,4 +112,4 @@ class State {
     }
 }
 
-export function state() { return State.instance }
+export default State.instance

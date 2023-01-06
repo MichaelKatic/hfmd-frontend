@@ -1,13 +1,13 @@
-import { get } from './hfmd.js'
-import { editorJs, site } from './template/index.js'
-import { state } from './state.js'
+import hfmd from './hfmd.js'
+import template from './template/index.js'
+import state from './state.js'
 import { Element, $P } from './element/element.js'
-import { mobileStyle, defaultStyle } from './style.js'
+import style from './style.js'
 
 const setIsMobile = (userAgent) => {
     const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
-    state().set('isMobile', isMobile)
-    state().set('activeStyle', isMobile ? mobileStyle : defaultStyle)
+    state.set('isMobile', isMobile)
+    state.set('activeStyle', isMobile ? style.mobileStyle : style.defaultStyle)
 }
 
 const templateDefault = ({id, type, data}) => 
@@ -22,27 +22,27 @@ const mapTemplate = ({id, type, data}) => {
     }
     const size = imageSize.large;
     switch(type) {
-        case 'paragraph': return editorJs.paragraph({id, type, data})
-        case 'header': return editorJs.header({id, type, data})
+        case 'paragraph': return template.editorJs.paragraph({id, type, data})
+        case 'header': return template.editorJs.header({id, type, data})
         case 'image': {
             switch(data.file.formats != null && data.file.formats[size] != null) {
-                case true: return editorJs.imageFormat(size)({id, type, data})
-                case false: return editorJs.image({id, type, data})
+                case true: return template.editorJs.imageFormat(size)({id, type, data})
+                case false: return template.editorJs.image({id, type, data})
             }
         }
         case 'list': {
             switch(data.style) {
-                case 'unordered': return editorJs.listUnordered({id, type, data})
-                case 'ordered': return editorJs.listOrdered({id, type, data})
+                case 'unordered': return template.editorJs.listUnordered({id, type, data})
+                case 'ordered': return template.editorJs.listOrdered({id, type, data})
             }
         }
-        case 'embed': return editorJs.embed({id, type, data})
-        case 'delimiter': return editorJs.delimiter({id, type, data})
-        case 'table': return editorJs.table({id, type, data})
-        case 'code': return editorJs.code({id, type, data}) 
-        case 'raw': return editorJs.raw({id, type, data}) 
-        case 'LinkTool': return editorJs.link({id, type, data}) 
-        case 'checklist': return editorJs.checklist({id, type, data}) 
+        case 'embed': return template.editorJs.embed({id, type, data})
+        case 'delimiter': return template.editorJs.delimiter({id, type, data})
+        case 'table': return template.editorJs.table({id, type, data})
+        case 'code': return template.editorJs.code({id, type, data}) 
+        case 'raw': return template.editorJs.raw({id, type, data}) 
+        case 'LinkTool': return template.editorJs.link({id, type, data}) 
+        case 'checklist': return template.editorJs.checklist({id, type, data}) 
     }
     
     return templateDefault({id, type, data})
@@ -67,21 +67,28 @@ const runApp = () => {
     const statePath = `cms.api.${model}.${id}`
     const requestPath = `http://localhost:3000/${model}/${id}/raw`
 
-    get(requestPath).then(
-        response => state().set(statePath, response.data),
+    //This should be a helper function and should check the state path and only request if undefined.
+    // populate(statePath, withData => {
+    //     hfmd.get(requestPath).then(
+    //         response => withData(response.data),
+    //         error => console.log('error', error)
+    //     )
+    // })
+    hfmd.get(requestPath).then(
+        response => state.set(statePath, response.data),
         error => console.log('error', error)
     )
 
-    state().sub(statePath, (value, previousValue, path, relativePath) => {
+    state.sub(statePath, (value, previousValue, path, relativePath) => {
         // const headHtml = template.site.htmlHead({title: value.attributes.Title, isMobile});
-        const titleHtml = site.breadcrumb({
+        const titleHtml = template.site.breadcrumb({
             id: value.id,
             title: value.attributes.Title,
             model
         })
         const editorJsBody = value.attributes.Body
         const bodyHtml = renderEditorJs(editorJsBody.blocks)
-        const wrappedBodyHtml = site.wrapperBody({content: titleHtml + bodyHtml})
+        const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + bodyHtml})
 
         document.body = Element.html(wrappedBodyHtml)
     })
@@ -105,7 +112,7 @@ const runApp = () => {
     // )
 
     // hfmd.get('http://localhost:3000/blogs/2/raw').then(
-    //     response => state().set('cms.api.blogs.2', response.data),
+    //     response => state.set('cms.api.blogs.2', response.data),
     //     error => console.log('error', error)
     // )
 }
@@ -120,21 +127,21 @@ window.loadTest = (id) => {
     const statePath = `cms.api.${model}.${id}`
     const requestPath = `http://localhost:3000/${model}/${id}/raw`
 
-    get(requestPath).then(
-        response => state().set(statePath, response.data),
+    hfmd.get(requestPath).then(
+        response => state.set(statePath, response.data),
         error => console.log('error', error)
     )
 
-    state().sub(statePath, (value, previousValue, path, relativePath) => {
+    state.sub(statePath, (value, previousValue, path, relativePath) => {
         // const headHtml = template.site.htmlHead({title: value.attributes.Title, isMobile});
-        const titleHtml = site.breadcrumb({
+        const titleHtml = template.site.breadcrumb({
             id: value.id,
             title: value.attributes.Title,
             model
         })
         const editorJsBody = value.attributes.Body
         const bodyHtml = renderEditorJs(editorJsBody.blocks)
-        const wrappedBodyHtml = site.wrapperBody({content: titleHtml + bodyHtml})
+        const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + bodyHtml})
 
         document.body = Element.html(wrappedBodyHtml)
     })

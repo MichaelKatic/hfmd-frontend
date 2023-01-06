@@ -1,9 +1,12 @@
-const express = require('express')
-const path = require('path')
-const cms = require('./hfmd-cms.js')
-const template = require('./template/index.js')
-const { state } = require('./state.js')
-const {mobileStyle, defaultStyle} = require('./style.js')
+//External libs
+import express from 'express'
+import path from 'path'
+
+import hfmd from './hfmd.js'
+import template from './template/index.js'
+import '../public/js/lodash/core.js'
+import state from '../public/js/state.js'
+import style from '../public/js/style.js'
 
 
 const app = express()
@@ -39,27 +42,27 @@ const templateDefault = ({id, type, data}) =>
 const mapTemplate = ({id, type, data}) => {
     const size = imageSize.large;
     switch(type) {
-        case 'paragraph': return template.editorJs.paragraph({id, type, data})
-        case 'header': return template.editorJs.header({id, type, data})
+        case 'paragraph': return editorJs.paragraph({id, type, data})
+        case 'header': return editorJs.header({id, type, data})
         case 'image': {
             switch(data.file.formats != null && data.file.formats[size] != null) {
-                case true: return template.editorJs.imageFormat(size)({id, type, data})
-                case false: return template.editorJs.image({id, type, data})
+                case true: return editorJs.imageFormat(size)({id, type, data})
+                case false: return editorJs.image({id, type, data})
             }
         }
         case 'list': {
             switch(data.style) {
-                case 'unordered': return template.editorJs.listUnordered({id, type, data})
-                case 'ordered': return template.editorJs.listOrdered({id, type, data})
+                case 'unordered': return editorJs.listUnordered({id, type, data})
+                case 'ordered': return editorJs.listOrdered({id, type, data})
             }
         }
-        case 'embed': return template.editorJs.embed({id, type, data})
-        case 'delimiter': return template.editorJs.delimiter({id, type, data})
-        case 'table': return template.editorJs.table({id, type, data})
-        case 'code': return template.editorJs.code({id, type, data}) 
-        case 'raw': return template.editorJs.raw({id, type, data}) 
-        case 'LinkTool': return template.editorJs.link({id, type, data}) 
-        case 'checklist': return template.editorJs.checklist({id, type, data}) 
+        case 'embed': return editorJs.embed({id, type, data})
+        case 'delimiter': return editorJs.delimiter({id, type, data})
+        case 'table': return editorJs.table({id, type, data})
+        case 'code': return editorJs.code({id, type, data}) 
+        case 'raw': return editorJs.raw({id, type, data}) 
+        case 'LinkTool': return editorJs.link({id, type, data}) 
+        case 'checklist': return editorJs.checklist({id, type, data}) 
     }
     
     return templateDefault({id, type, data})
@@ -75,9 +78,9 @@ const renderEditorJs = (blocks) => {
 
 const allowedModels = ['blogs']
 const setIsMobile = (userAgent) => {
-    isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+    const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
     state.set('isMobile', isMobile)
-    state.set('activeStyle', isMobile ? mobileStyle : defaultStyle)
+    state.set('activeStyle', isMobile ? style.mobileStyle : style.defaultStyle)
 }
 
 const serverError = (error, res) => {
@@ -87,9 +90,9 @@ const serverError = (error, res) => {
 app.get('/', (req, res) => {
     setIsMobile(req.get('user-agent'))
 
-    const headHtml = template.site.htmlHead({title: 'Home for my Dome', isMobile});
-    const titleHtml = template.site.home({models: allowedModels})
-    const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml})
+    const headHtml = site.htmlHead({title: 'Home for my Dome', isMobile});
+    const titleHtml = site.home({models: allowedModels})
+    const wrappedBodyHtml = site.wrapperBody({content: titleHtml})
     res.send(headHtml + wrappedBodyHtml)
 })
 
@@ -106,30 +109,22 @@ app.get('/:model', function (req, res) {
 
     const fields = encodeURIComponent(['id','Title'].join(', '))
 
-    cms.get(`https://cms.homeformydome.com/api/${model}?fields=${fields}`).then(
+    hfmd.get(`https://cms.homeformydome.com/api/${model}?fields=${fields}`).then(
         response => {
-            const headHtml = template.site.htmlHead({title: model, isMobile});
-            const titleHtml = template.site.title({title: model})
+            const headHtml = site.htmlHead({title: model, isMobile});
+            const titleHtml = site.title({title: model})
             const data = response.data;
-            const modelIndexHtml = template.site.modelIndex({model, data})
-            const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + modelIndexHtml})
+            const modelIndexHtml = site.modelIndex({model, data})
+            const wrappedBodyHtml = site.wrapperBody({content: titleHtml + modelIndexHtml})
             res.send(headHtml + wrappedBodyHtml)
         },
         error => serverError(error, res)
     )
 })
 
-// const allowedNodeModules = [
-//     'clientside-require/dist/bundle.js',
-//     'https/package.json',
-//     'lodash/package.json ',
-//     'fs/package.json',
-//     'lodash/package.json',
-// ]
-
 const allowedNodeModules = [
     // 'util', // Not sure what is requiring this. 
-    'clientside-require',
+    // 'clientside-require',
     // 'node:https',
     // 'lodash',
     // 'jquery',
@@ -138,31 +133,31 @@ const allowedNodeModules = [
 
 //js/template/element/element.js 
 
-app.get('/node_modules/:nodeModule/:nodePath(*)', function (req, res) {
-    const nodeModule = req.params.nodeModule
-    const nodePath = req.params.nodePath
+// app.get('/node_modules/:nodeModule/:nodePath(*)', function (req, res) {
+//     const nodeModule = req.params.nodeModule
+//     const nodePath = req.params.nodePath
 
-    if (nodeModule.includes('node:'))
-    {
-        //Fucked   
-    }
+//     if (nodeModule.includes('node:'))
+//     {
+//         //Fucked   
+//     }
 
-    if (!allowedNodeModules.includes(nodeModule))
-    {
-        res.status(401).send("Unauthorized")
-        return
-    }
+//     if (!allowedNodeModules.includes(nodeModule))
+//     {
+//         res.status(401).send("Unauthorized")
+//         return
+//     }
 
-    res.sendFile(req.url, {root: path.join(__dirname, '../')}, function (err) {
-        if (err) {
-            res.status(404).send("Not found")
-        } else {
-            console.log('Sent:', req.url);
-        }
-    })
-})
+//     res.sendFile(req.url, {root: path.join(__dirname, '../')}, function (err) {
+//         if (err) {
+//             res.status(404).send("Not found")
+//         } else {
+//             console.log('Sent:', req.url);
+//         }
+//     })
+// })
 
-app.get('/:model/:id', async function (req, res) {
+app.get('/:model/:id', function (req, res) {
     const model = req.params.model
     const id = req.params.id
 
@@ -174,12 +169,15 @@ app.get('/:model/:id', async function (req, res) {
 
     setIsMobile(req.get('user-agent'))
 
-    requestPath = `https://cms.homeformydome.com/api/${model}/${id}`
-    statePath = `cms.api.${model}.${id}`
+    const requestPath = `https://cms.homeformydome.com/api/${model}/${id}`
+    const statePath = `cms.api.${model}.${id}`
 
-    template.site.htmlHead({title: 'client side rendering test', isMobile}).then(headHtml => {
-        res.send(headHtml)
-    })
+    // server.htmlHead({title: 'client side rendering test', isMobile}).then(headHtml => {
+    //     res.send(headHtml)
+    // })
+
+    const headHtml = template.site.htmlHead({title: 'client side rendering test'})
+    res.send(headHtml)
 
     // const headHtml = await template.site.htmlHead({title: 'client side rendering test', isMobile})
     // res.send(headHtml)
@@ -233,7 +231,7 @@ app.get('/:model/:id/raw', function (req, res) {
         return
     }
 
-    cms.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
+    hfmd.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
         response => {
             response.data.attributes.Body = parseEditorJsBody(response.data.attributes.Body)
             res.json(response)
@@ -265,4 +263,4 @@ app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
 
-module.exports = app;
+export default app;

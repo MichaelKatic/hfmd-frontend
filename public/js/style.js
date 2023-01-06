@@ -64,7 +64,7 @@ mobileStyle.wrapper = `
     `
 let activeStyle = {}
 
-export {
-    styles as defaultStyle,
+export default {
+    defaultStyle: styles,
     mobileStyle 
 }

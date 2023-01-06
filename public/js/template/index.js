@@ -1,7 +1,7 @@
 import editorJs from './editor-js.js'
 import site from './site.js'
 
-export {
+export default {
     editorJs,
     site
 }

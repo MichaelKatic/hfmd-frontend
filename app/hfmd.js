@@ -1,9 +1,15 @@
-const dotenv = require('dotenv')
-const https = require('https')
+import dotenv from 'dotenv'
+import https from 'https'
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 
 const apiGetToken = process.env.HFMD_API_TOKEN
+const types = {
+    SERVER: "server",
+    CLIENT: 'client'
+}
+
+const type = types.SERVER
 
 const get = (url) => new Promise((resolve, reject) => {
     const options = {
@@ -45,6 +51,6 @@ const get = (url) => new Promise((resolve, reject) => {
     });
 });
 
-module.exports = {
+export default {
     get
 }

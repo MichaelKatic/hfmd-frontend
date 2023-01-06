@@ -67,6 +67,6 @@ const get = (url) => new Promise((resolve, reject) => {
     // });
 });
 
-export {
+export default {
     get
 }

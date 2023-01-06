@@ -1,7 +1,6 @@
-const editorJs = require('./editor-js.js')
-const site = require('./site.js')
+import site from './site.js'
+import template from '../../public/js/template/index.js'
 
-module.exports = {
-    editorJs,
-    site
-}
+template.site = site
+
+export default template
