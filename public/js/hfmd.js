@@ -1,6 +1,13 @@
 // import jq from './jq/core.js';
 
-const get = (url) => new Promise((resolve, reject) => {
+const get = (url) => {
+    const xhttp = new XMLHttpRequest();
+    xhttp.open('GET', url, false);
+    xhttp.send();
+    return JSON.parse(xhttp.responseText);
+}
+
+const getPromise = (url) => new Promise((resolve, reject) => {
     const xhttp = new XMLHttpRequest();
     xhttp.open('GET', url, false);
     xhttp.send();
@@ -68,5 +75,6 @@ const get = (url) => new Promise((resolve, reject) => {
 });
 
 export default {
-    get
+    get,
+    getPromise
 }

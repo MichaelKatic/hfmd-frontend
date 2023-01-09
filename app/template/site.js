@@ -1,5 +1,5 @@
-// const e = require('./element/element.js') // Alt way of import to spam less. 
-import { Element, $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr } from '../../public/js/element/element.js'
+import e from '../../public/js/smalle/element.js' // Alt way of import to spam less. 
+import { Element, $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr } from '../../public/js/smalle/element.js'
 import state from '../../public/js/state.js'
 import fs from 'fs/promises'
 
@@ -22,7 +22,7 @@ const getFileList = async (directory, type, basePath='') => {
     return files
 } 
 
-const htmlHead = ({title}) => 
+const htmlHead = ({title, inject=null}) => 
     $Head([
         $Title(title),
         $Style(`
@@ -30,25 +30,25 @@ const htmlHead = ({title}) =>
                 ${state.activeStyle.firstLetter}
             }
         `),
-        $Link.rel('stylesheet').type('text/css').href(`/css/style-${state.isMobile ? 'mobile' : 'desktop'}.css`),
-        $Link.rel('stylesheet').type('text/css').href('/css/style.css'),
-        $Link.rel('stylesheet').href('https://use.typekit.net/whq2zsc.css'), //Adobe font styles
-        $Link.rel('icon').type('image/png').href('/favicon/coffee-16.ico'),
+        $Link.rel('stylesheet').type('text/css').href(`/css/style-${state.isMobile ? 'mobile' : 'desktop'}.css`).async(),
+        $Link.rel('stylesheet').type('text/css').href('/css/style.css').async(),
+        $Link.rel('stylesheet').href('https://use.typekit.net/whq2zsc.css').async(), //Adobe font styles
+        $Link.rel('icon').type('image/png').href('/favicon/coffee-16.ico').async(),
         // $Script.type('text/javascript').src('/node_modules/clientside-require/dist/bundle.js'), // Allow node style export/import
         // $Script('window.home = {}').type('text/javascript'),
         // $Script.type('application/javascript').src(`/js/jq/core.js`),
+        inject ? $Script(inject).type('application/javascript') : '',
         $Script.type('application/javascript').src(`/js/lodash/core.js`),
-        [
-            'element/element.js',
-            'hfmd.js',
-            'lodash/core.js',
-            'state.js',
-            'style.js',
-            'template/editor-js.js',
-            'template/index.js',
-            'template/site.js',
-        ].map(file => $Script.type('module').src(`/js/${file}`).render()),
-        $Script.type('module').src('/js/app.js').render(),
+        // [
+        //     'smalle/element.js',
+        //     'hfmd.js',
+        //     'state.js',
+        //     'style.js',
+        //     'template/editor-js.js',
+        //     'template/index.js',
+        //     'template/site.js',
+        // ].map(file => $Script.type('module').src(`/js/${file}`).render()),
+        $Script.type('module').src('/js/app.js'),
         // new Promise(resolve => resolve(
         //     $Script.type('module').src('/js/app.js').render()
         // ))

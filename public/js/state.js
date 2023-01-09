@@ -100,14 +100,26 @@ class State {
 
     sub(path, callback) {
         let callbacks = _.get(State.instance.subs, path) || []
-        callbacks.push(callback)
-        _.set(State.instance.subs, path, callbacks)
+        if (!callbacks.includes(callback)) {
+            callbacks.push(callback)
+            _.set(State.instance.subs, path, callbacks)
 
-        //If value exists call callback immediatly
+            //If value exists call callback immediatly
+            const value = _.get(State.instance.state, path)
+            if (value !== undefined) {
+                callback(value, value, '', '')
+            }
+        }
+    }
+
+    trigger(path) {
+        const callbacks = _.get(State.instance.subs, path)
         const value = _.get(State.instance.state, path)
-        if (value !== undefined)
-        {
-            callback(value, '', path)
+
+        if (callbacks !== undefined) {
+            for (const callback of callbacks) {
+                callback(value, value, '', '')
+            }
         }
     }
 }

@@ -51,10 +51,14 @@ class Element {
                                 attributeValue = Object.keys(attributeValue).map(styleKey => 
                                     styleKey + ': ' + attributeValue[styleKey]
                                 ).join('; ')
-                            }
+                            } 
+                        } else if (typeof attributeValue === 'undefined') {
+                            //Boolean attribute
+                            attributeValue = 'undefined'
                         }
 
-                        target.attributes[property] = attributeValue
+                        // target.attributes[property] = attributeValue
+                        target.addAttribute(property, attributeValue)
 
                         return this
                         // target[ property ].apply( target, arguments ); //call original function
@@ -94,6 +98,10 @@ class Element {
 
     get content() {
         return this.#content
+    }
+
+    addAttribute(name, value) {
+        this.attributes[name] = value;
     }
 
     set attributes(attributes) {
@@ -136,6 +144,16 @@ class Element {
                 return attribute ? key : ''
             }
 
+            if (key === 'bool')
+            {
+                return attribute
+            }
+
+            if (attribute === 'undefined')
+            {
+                return key
+            }
+
             if (attribute === undefined)
             {
                 return ''
@@ -161,6 +179,15 @@ class Element {
             return content
         }
     }
+
+    //BIG NOTE BOI - TODO
+    // We can make all individual components subscribe to the parts of the state they use.
+    // STEPS 
+    // 1. make all state heirarchy proxies. 
+    // 2. On render call, we can check content and all attributes. 
+    // 3. Any that have proxy property 'sub' or whatever
+    // 4. We create a subscription to call render again later.
+    // Prereq: we'll also have to link render directly to dom element or sumpin.
         
     renderStart(tag = null) {
         return `<${(tag ?? this.tag + ' ' + this.renderAttributes()).trim()}>`
@@ -209,6 +236,45 @@ class Paragraph extends Element {
     }
 
     //Extend funcitonality if you please. 
+}
+
+class Anchor extends Element {
+    constructor(...args) {
+        return super('a', ...args)
+    }
+
+    getFullUrl(href) {
+        let url = {}
+
+        try{
+            url = new URL(href)
+        } catch (error) {
+            try{
+                if (href[0] == '.') {
+                    url = new URL(document.location.origin + '/' + href)
+                } else if (href[0] == '/') {
+                    url = new URL(document.location.origin + href)
+                }
+            } catch (error) {
+                return undefined
+            }   
+        }
+
+        return url.href
+    }
+
+    render() {
+        let href = this.getFullUrl(this.attributes.href)
+        let hasLocalLink = href !== undefined && this.attributes.target !== '_blank'
+
+        if (hasLocalLink) {
+            // if href is a url targeted at this tab use optimized local app route
+            this.attributes.href = 'javascript:;'
+            this.attributes.onclick = `window.hfmd.app.visit('${href}')`
+        } 
+
+        return super.render()
+    }
 }
 
 class H extends Element {
@@ -268,7 +334,6 @@ const elementClassProxy = (tag) => {
             return target[property];
         },
         apply(target, thisArg, argumentsList) {
-            // console.log(target, thisArg, argumentsList)
             if (tag) {
                 return new target(tag).push(...argumentsList)
             } else {
@@ -338,6 +403,7 @@ let $Tr = elementProxy(Element, 'tr')
 //Extended
 let $H = elementProxy(H)
 $P = elementProxy(Paragraph)
+$A = elementProxy(Anchor)
 
 // const exportModules = {Element}
 
@@ -352,6 +418,36 @@ $P = elementProxy(Paragraph)
 // exportModules.$H = elementProxy(H) //Set your own extension of element
 
 // export exportModules
+
+const e = {
+    Element,
+    $A,
+    $Body,
+    $Div,
+    $H,
+    $H1,
+    $H2,
+    $H3,
+    $H4,
+    $H5,
+    $H6,
+    $Head,
+    $Hr,
+    $Iframe,
+    $Img,
+    $Input,
+    $Label,
+    $Li,
+    $Link,
+    $P,
+    $Pre,
+    $Script,
+    $Style,
+    $Table,
+    $Td,
+    $Title,
+    $Tr,
+}
 
 export {
     Element,
@@ -382,6 +478,8 @@ export {
     $Title,
     $Tr,
 }
+
+export default e
 
 // makeGlobal = false
 // if (makeGlobal){
