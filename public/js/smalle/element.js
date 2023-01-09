@@ -266,12 +266,15 @@ class Anchor extends Element {
     render() {
         let href = this.getFullUrl(this.attributes.href)
         let hasLocalLink = href !== undefined && this.attributes.target !== '_blank'
+        let isCurrentUrl = href === document.location.href
 
-        if (hasLocalLink) {
+        if (isCurrentUrl) {
+            this.attributes.href = '#'
+        } else if (hasLocalLink) {
             // if href is a url targeted at this tab use optimized local app route
             this.attributes.href = 'javascript:;'
-            this.attributes.onclick = `window.hfmd.app.visit('${href}')`
-        } 
+            this.attributes.onclick = window.hfmd.app.visitWithPreload(href)
+        }
 
         return super.render()
     }

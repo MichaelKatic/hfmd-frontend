@@ -68,7 +68,7 @@ const appRouteCallbacks = {}
 
 window.addEventListener('popstate', (event) => { 
     const url = document.location
-    const state = event.state
+    const eventState = event.state
     app.visit(url, false)
 });
 
@@ -82,8 +82,8 @@ const app = {
     },
     visit: (url, pushState=true) => {
         const {origin, pathname} = new URL(url)
-        const internalNav = origin === document.location.origin;
-        if (internalNav) {
+        const isInternalUrl = origin === document.location.origin;
+        if (isInternalUrl) {
             //Override browser behavior
             if(pushState) {
                 window.history.pushState('History Item Name', 'New Page Title', url);
@@ -95,8 +95,41 @@ const app = {
             //Do normal load
             window.location.href = url
         }
+    },
+    preloadQueue: [],
+    isReady: false,
+    ready: () => {
+        if (!app.isReady) {
+            app.isReady = true;
+            for (const preload of app.preloadQueue)
+            {
+                preload()
+            }
+        }
+    },
+    preload: (url) => {
+        const {origin, pathname} = new URL(url)
+        const isInternalUrl = origin === document.location.origin;
+        if (isInternalUrl) {
+            const paramsUrl = origin + '/params' + pathname
+            const response = hfmd.get(paramsUrl)
+            appRouteCallbacks[response.routePattern](response.params, true)
+        }
+    },
+    visitWithPreload: (url) => {
+        setTimeout(() => {
+            if (app.isReady) {
+                app.preload(url)
+            } else {
+                app.preloadQueue.push(() => app.preload(url))
+            }
+        }, 0)
+        
+        return `window.hfmd.app.visit('${url}')`
     }
 }
+
+window.hfmd.app = app
 
 const clientError = (error) => {
     console.log('error', error)
@@ -105,70 +138,99 @@ const clientError = (error) => {
 const runApp = () => {
     setIsMobile(window.navigator.userAgent);
 
-    app.get(routes.root, () => {
-        const titleHtml = template.site.home({models: allowedModels})
-        const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml})
+    app.get(routes.root, (_, preload=false) => {
+        if (!preload) {
+            const titleHtml = template.site.home({models: allowedModels})
+            const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml})
 
-        document.body = Element.html(wrappedBodyHtml)
+            document.body = Element.html(wrappedBodyHtml)
+        }
     })
 
-    app.get(routes.modelIndex, (params) => {
+    app.get(routes.modelIndex, (params, preload=false) => {
         const model = params.model
         const fields = encodeURIComponent(['id','Title'].join(', '))
         const statePath = `cms.api.${model}.index`
-        const requestPath = `http://localhost:3000/data/${model}?fields=${fields}`
-        
-        if (!state.get(statePath)) {
-            hfmd.getPromise(requestPath).then(
-                response => state.set(statePath, response.data),
-                error => clientError(error)
-            )
+        const requestPath = `/data/${model}?fields=${fields}`
 
-            state.sub(statePath, (value, previousValue, path, relativePath) => {
-                const headHtml = template.site.htmlHead({title: model});
-                const titleHtml = template.site.title({title: model})
-                const modelIndexHtml = template.site.modelIndex({model, data: value})
-                const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + modelIndexHtml})
-        
-                document.body = Element.html(headHtml + wrappedBodyHtml)
-            })
+        const loadStateData = (trigger) => {
+            if (!state.get(statePath)) {
+                hfmd.getPromise(requestPath).then(
+                    response => state.set(statePath, response.data, trigger),
+                    error => clientError(error)
+                )
+            }
+        }
+
+        const subscribe = (trigger) => {
+            if (state.getSub(statePath).length == 0) {
+                state.sub(statePath, (value, previousValue, path, relativePath) => {
+                    const headHtml = template.site.htmlHead({title: model});
+                    const titleHtml = template.site.title({title: model})
+                    const modelIndexHtml = template.site.modelIndex({model, data: value})
+                    const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + modelIndexHtml})
+            
+                    document.body = Element.html(headHtml + wrappedBodyHtml)
+                }, trigger)
+            }
+        }
+
+        if (preload) {
+            loadStateData(false)
+            subscribe(false)
+        } else if (!state.get(statePath)) {
+            loadStateData(true)
+            subscribe(true)
         } else {
             state.trigger(statePath)
         }
     })
 
-    app.get(routes.modelDetails, (params) => {
+    app.get(routes.modelDetails, (params, preload=false) => {
         const model = params.model
         const id = params.id
         const statePath = `cms.api.${model}.${id}`
-        const requestPath = `http://localhost:3000/data/${model}/${id}`
-    
-        if (!state.get(statePath)) {
-            hfmd.getPromise(requestPath).then(
-                response => state.set(statePath, response.data),
-                error => clientError(error)
-            )
+        const requestPath = `/data/${model}/${id}`
 
-            state.sub(statePath, (value, previousValue, path, relativePath) => {
-                const titleHtml = template.site.breadcrumb({
-                    id: value.id,
-                    title: value.attributes.Title,
-                    model
-                })
-                const editorJsBody = value.attributes.Body
-                const bodyHtml = renderEditorJs(editorJsBody.blocks)
-                const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + bodyHtml})
-        
-                document.body = Element.html(wrappedBodyHtml)
-            })
+        const loadStateData = (trigger) => {
+            if (!state.get(statePath)) {
+                hfmd.getPromise(requestPath).then(
+                    response => state.set(statePath, response.data, trigger),
+                    error => clientError(error)
+                )
+            }
+        }
+
+        const subscribe = (trigger) => {
+            if (state.getSub(statePath).length == 0) {
+                state.sub(statePath, (value, previousValue, path, relativePath) => {
+                    const titleHtml = template.site.breadcrumb({
+                        id: value.id,
+                        title: value.attributes.Title,
+                        model
+                    })
+                    const editorJsBody = value.attributes.Body
+                    const bodyHtml = renderEditorJs(editorJsBody.blocks)
+                    const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + bodyHtml})
+            
+                    document.body = Element.html(wrappedBodyHtml)
+                }, trigger)
+            }
+        }
+    
+        if (preload) {
+            loadStateData(false)
+            subscribe(false)
+        } else if (!state.get(statePath)) {
+            loadStateData(true)
+            subscribe(true)
         } else {
             state.trigger(statePath)
         }
     })
 
+    app.ready(); 
     console.log('app running!')
 }
-
-window.hfmd.app = app
 
 export const run = runApp()
