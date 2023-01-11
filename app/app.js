@@ -35,7 +35,7 @@ const serverError = (error, res) => {
 }
 
 const serverDataError = (error, res) => {
-    res.json(error)
+    res.json({error: error})
 }
 
 app.get('/data/:model/:id', function (req, res) {

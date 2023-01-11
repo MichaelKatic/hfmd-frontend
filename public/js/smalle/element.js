@@ -484,6 +484,11 @@ export {
 
 export default e
 
+if (window)
+{
+    window.e = e;
+}
+
 // makeGlobal = false
 // if (makeGlobal){
 //     Object.keys(exportModules).forEach(key => window[key] = exportModules[key])

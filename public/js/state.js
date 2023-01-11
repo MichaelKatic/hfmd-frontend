@@ -2,14 +2,14 @@
 
 class State {
     static get instance() {
-        let globalSpace; 
+        let globalSpace
 
         if (typeof(window) === 'undefined') {
-            //node environment
-            globalSpace = global;
+            // node environment
+            globalSpace = global
         } else {
-            //browser environment
-            globalSpace = window;
+            // browser environment
+            globalSpace = window
         }
 
         if (globalSpace.state === undefined)
@@ -20,12 +20,12 @@ class State {
     }
 
     state = {}
-    subs = {} //Things like {"prop.color.green": [callback1, callback2]}
+    subs = {} // Things like {"prop.color.green": [callback1, callback2]}
 
     constructor()  {
         const proxyHandler = {
             get(target, property) {                
-                //Normal behavior if property found
+                // Normal behavior if property found
                 if (property in target) {
                     return target[property]
                 }
@@ -45,14 +45,17 @@ class State {
             }
         }
 
-        return new Proxy(this, proxyHandler);
+        return new Proxy(this, proxyHandler)
     }
 
-    set(path, value, trigger=true) { //Disable triggerSubs for things like preloading.
-        const hasValue = path !== '';
+    set(path, value, trigger=true) { // Disable triggerSubs for things like preloading.
+        const hasValue = path !== ''
         const previousValue =  _.get(State.instance.state, path)
         if (previousValue !== value) {
-            //Update the state
+            // Update the state
+            console.log('%c State updated: ' + path, 'padding: 5px; background:#85ccff; color:#000000')
+            console.log('\tfrom: ', previousValue)
+            console.log('\tto: ', value)
             if (hasValue) {
                 _.set(State.instance.state, path, value)
             } else {
@@ -60,9 +63,9 @@ class State {
             }
 
             if (trigger) {
-                //State changed trigger callback subscriptions
+                // State changed trigger callback subscriptions
                 const pathArray = path.split(/(?=[\.,[])/g) // convert 'cms.api[9].blogs.2' to ['cms', '.api', '[9]', '.blogs', '.2']
-                while (pathArray.length > 0) { //Find all callbacks in path heirarchy
+                while (pathArray.length > 0) { // Find all callbacks in path heirarchy
                     const subPath = pathArray.join('')
                     pathArray.pop()
                     if (_.has(State.instance.subs, subPath)) {
@@ -72,9 +75,8 @@ class State {
                                 if (typeof(callback) === 'function') {
                                     const valueInState = _.get(State.instance.state, subPath)
                                     const relativePath = path.substring(subPath.length + 1)
-                                    const previousValueInState = JSON.parse(JSON.stringify(valueInState));
+                                    const previousValueInState = JSON.parse(JSON.stringify(valueInState))
                                     _.set(previousValueInState, relativePath, previousValue)
-                                    // callback(value, previousValue, path) //previous value broken
                                     callback(valueInState, previousValueInState, path, relativePath)
                                 }
                             })

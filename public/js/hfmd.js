@@ -1,17 +1,18 @@
-// import jq from './jq/core.js';
-
 const get = (url) => {
-    const xhttp = new XMLHttpRequest();
-    xhttp.open('GET', url, false);
-    xhttp.send();
-    return JSON.parse(xhttp.responseText);
+    const xhttp = new XMLHttpRequest()
+    xhttp.open('GET', url, false)
+    xhttp.send()
+    return JSON.parse(xhttp.responseText)
 }
 
 const getPromise = (url) => new Promise((resolve, reject) => {
-    const xhttp = new XMLHttpRequest();
-    xhttp.open('GET', url, false);
-    xhttp.send();
-    resolve(JSON.parse(xhttp.responseText));
+    const response = get(url)
+    if (response.error)
+    {
+        response.url = url
+        reject(response)
+    }
+    resolve(response)
 
     // jq.ajax(
     //     { 

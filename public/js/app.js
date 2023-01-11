@@ -12,7 +12,7 @@ const setIsMobile = (userAgent) => {
 }
 
 const templateDefault = ({id, type, data}) => 
-    $P.push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render();
+    $P.push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render()
 
 const mapTemplate = ({id, type, data}) => {    
     const imageSize = {
@@ -21,7 +21,7 @@ const mapTemplate = ({id, type, data}) => {
         medium: 'medium',
         thumbnail: 'thumbnail'
     }
-    const size = imageSize.large;
+    const size = imageSize.large
     switch(type) {
         case 'paragraph': return template.editorJs.paragraph({id, type, data})
         case 'header': return template.editorJs.header({id, type, data})
@@ -51,17 +51,17 @@ const mapTemplate = ({id, type, data}) => {
 
 const renderEditorJs = (blocks) => {
     const firstParagraphIndex = blocks.findIndex(block => block.type === "paragraph")
-    blocks[firstParagraphIndex].data.into = true;
+    blocks[firstParagraphIndex].data.into = true
     return blocks.reduce((acc, cur) => 
         acc + mapTemplate(cur)
-    , '');
+    , '')
 }
 
 if (window.history) {
-    var myOldUrl = window.location.href;
+    var myOldUrl = window.location.href
     window.addEventListener('hashchange', function(){
-        window.history.pushState({}, null, myOldUrl);
-    });
+        window.history.pushState({}, null, myOldUrl)
+    })
 }
 
 const appRouteCallbacks = {}
@@ -70,7 +70,7 @@ window.addEventListener('popstate', (event) => {
     const url = document.location
     const eventState = event.state
     app.visit(url, false)
-});
+})
 
 const app = {
     get: (pattern, callback) => { 
@@ -82,11 +82,11 @@ const app = {
     },
     visit: (url, pushState=true) => {
         const {origin, pathname} = new URL(url)
-        const isInternalUrl = origin === document.location.origin;
+        const isInternalUrl = origin === document.location.origin
         if (isInternalUrl) {
             //Override browser behavior
             if(pushState) {
-                window.history.pushState('History Item Name', 'New Page Title', url);
+                window.history.pushState('History Item Name', 'New Page Title', url)
             }
             const paramsUrl = origin + '/params' + pathname
             const response = hfmd.get(paramsUrl)
@@ -100,7 +100,7 @@ const app = {
     isReady: false,
     ready: () => {
         if (!app.isReady) {
-            app.isReady = true;
+            app.isReady = true
             for (const preload of app.preloadQueue)
             {
                 preload()
@@ -109,7 +109,7 @@ const app = {
     },
     preload: (url) => {
         const {origin, pathname} = new URL(url)
-        const isInternalUrl = origin === document.location.origin;
+        const isInternalUrl = origin === document.location.origin
         if (isInternalUrl) {
             const paramsUrl = origin + '/params' + pathname
             const response = hfmd.get(paramsUrl)
@@ -132,11 +132,11 @@ const app = {
 window.hfmd.app = app
 
 const clientError = (error) => {
-    console.log('error', error)
+    console.warn('%c error!', 'padding: 5px; background:#ff85cc; color:#000000', error)
 }
 
 const runApp = () => {
-    setIsMobile(window.navigator.userAgent);
+    setIsMobile(window.navigator.userAgent)
 
     app.get(routes.root, (_, preload=false) => {
         if (!preload) {
@@ -165,7 +165,7 @@ const runApp = () => {
         const subscribe = (trigger) => {
             if (state.getSub(statePath).length == 0) {
                 state.sub(statePath, (value, previousValue, path, relativePath) => {
-                    const headHtml = template.site.htmlHead({title: model});
+                    const headHtml = template.site.htmlHead({title: model})
                     const titleHtml = template.site.title({title: model})
                     const modelIndexHtml = template.site.modelIndex({model, data: value})
                     const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + modelIndexHtml})
@@ -229,8 +229,8 @@ const runApp = () => {
         }
     })
 
-    app.ready(); 
-    console.log('app running!')
+    app.ready() 
+    console.log('%c app running!', 'padding: 5px; background:#85ffcc; color:#000000')
 }
 
 export const run = runApp()

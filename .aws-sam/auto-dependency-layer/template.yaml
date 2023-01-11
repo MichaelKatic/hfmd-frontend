@@ -1,8 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 'app Sample SAM Template for app
-
-  '
+Description: 'app Sample SAM Template for app'
 Globals:
   Function:
     Timeout: 3
