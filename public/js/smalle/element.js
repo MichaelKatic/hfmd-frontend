@@ -1,3 +1,4 @@
+//Alternative name to smalle "small e" is "no big e" nobiggy
 class Element {
     //Maybe include attributes somwhere
     // https://www.w3schools.com/tags/ref_attributes.asp
@@ -173,6 +174,8 @@ class Element {
             return content.render()
         } else if (content.hasOwnProperty('prototype') && new content() instanceof Element) {
             return content.render()
+        // } else if (content.hasOwnProperty('smalleValue')) {
+        //     return content.smalleValue
         } else if (typeof content === 'function') {
             return content()
         } else {
@@ -266,14 +269,27 @@ class Anchor extends Element {
     render() {
         let href = this.getFullUrl(this.attributes.href)
         let hasLocalLink = href !== undefined && this.attributes.target !== '_blank'
-        let isCurrentUrl = href === document.location.href
+        const globalSpace = typeof(window) !== 'undefined' ? window : global
+        let isCurrentUrl = href === globalSpace.document.location.href
 
-        if (isCurrentUrl) {
+        if (this.attributes.href[0] === '#') {
+            let hash = this.attributes.href.replace("'", "")
+            let url = document.location.href
+            const hashIndex = url.indexOf('#')
+            url = url.substring(0, hashIndex == -1 ? undefined : hashIndex) + hash
+            this.attributes.href = 'javascript:;'
+            this.attributes.onclick = `this.scrollIntoView(); window.history.pushState('Scroll', 'test title', '${url}');`
+        } else if (isCurrentUrl) {
             this.attributes.href = '#'
         } else if (hasLocalLink) {
             // if href is a url targeted at this tab use optimized local app route
+            const randomString = () => Math.random().toString(36).replace('0.', '');
+            const uniqueClass = 'anchor_' + randomString();
+            this.attributes.class = (this.attributes.class || '') + ' ' + uniqueClass
             this.attributes.href = 'javascript:;'
-            this.attributes.onclick = window.hfmd.app.visitWithPreload(href)
+            this.attributes.onclick = globalSpace.hfmd.app.visitWithPreload(href, uniqueClass)
+            // TODO add server side visit with preload like global.hfmd.app.visitWithPreload(href, uniqueClass)
+            // It will have to inject something into the headder to trigger preload after site loads.  
         }
 
         return super.render()
@@ -422,36 +438,6 @@ $A = elementProxy(Anchor)
 
 // export exportModules
 
-const e = {
-    Element,
-    $A,
-    $Body,
-    $Div,
-    $H,
-    $H1,
-    $H2,
-    $H3,
-    $H4,
-    $H5,
-    $H6,
-    $Head,
-    $Hr,
-    $Iframe,
-    $Img,
-    $Input,
-    $Label,
-    $Li,
-    $Link,
-    $P,
-    $Pre,
-    $Script,
-    $Style,
-    $Table,
-    $Td,
-    $Title,
-    $Tr,
-}
-
 export {
     Element,
     $A,
@@ -482,14 +468,38 @@ export {
     $Tr,
 }
 
-export default e
-
-if (window)
-{
-    window.e = e;
+const globalSpace = (typeof(window) !== 'undefined' ? window : global)
+if(globalSpace.e === undefined) {
+    //Export global variable 'e' unless it's being used already
+    globalSpace.e = {
+        Element,
+        $A,
+        $Body,
+        $Div,
+        $H,
+        $H1,
+        $H2,
+        $H3,
+        $H4,
+        $H5,
+        $H6,
+        $Head,
+        $Hr,
+        $Iframe,
+        $Img,
+        $Input,
+        $Label,
+        $Li,
+        $Link,
+        $P,
+        $Pre,
+        $Script,
+        $Style,
+        $Table,
+        $Td,
+        $Title,
+        $Tr,
+    }
+} else {
+    console.warn('Smalle not exported to gloabl e variable since its being used. Current value:', globalSpace.e)
 }
-
-// makeGlobal = false
-// if (makeGlobal){
-//     Object.keys(exportModules).forEach(key => window[key] = exportModules[key])
-// }

@@ -1,8 +1,8 @@
 import { Element, $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr } from '../smalle/element.js';
-import state from '../state.js';
+import state from '../sk8ermike/state.js';
 
-const htmlHead = ({title}) => 
-    $Head([
+const htmlHead = ({title}) => ''
+//    $Head([
 //         $Title(title),
 //         $Style(`
 //             .intro::first-letter {
@@ -27,7 +27,7 @@ const htmlHead = ({title}) =>
 //             'template/site.js',
 //         ].map(file => $Script.type('module').src(`/js/${file}`).render()),
 //         $Script.type('module').src('/js/app.js').render(),
-    ]).render()
+//    ]).render()
 
 const home = ({models}) => 
     $Div([

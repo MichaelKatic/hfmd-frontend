@@ -1,7 +1,7 @@
-const home = require('./home.js')
-const model = require('./model.js')
+import home from './home.js'
+import modelIndex from './model-index.js'
 
-module.exports = {
+export {
     home,
-    model
+    modelIndex
 }

@@ -1,6 +1,5 @@
-import e from '../../public/js/smalle/element.js' // Alt way of import to spam less. 
 import { Element, $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr } from '../../public/js/smalle/element.js'
-import state from '../../public/js/state.js'
+import state from '../../public/js/sk8ermike/state.js'
 import fs from 'fs/promises'
 
 const getFileList = async (directory, type, basePath='') => {

@@ -1,15 +1,10 @@
 import hfmd from './hfmd.js'
 import template from './template/index.js'
-import state from './state.js'
+import { state } from './sk8ermike/index.js'
 import { Element, $P } from './smalle/element.js'
 import style from './style.js'
-import {allowedModels, routes} from './app-config.js'
-
-const setIsMobile = (userAgent) => {
-    const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
-    state.set('isMobile', isMobile)
-    state.set('activeStyle', isMobile ? style.mobileStyle : style.defaultStyle)
-}
+import { allowedModels, routes } from './app-config.js'
+import { home, modelIndex } from './component/index.js'
 
 const templateDefault = ({id, type, data}) => 
     $P.push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render()
@@ -51,7 +46,9 @@ const mapTemplate = ({id, type, data}) => {
 
 const renderEditorJs = (blocks) => {
     const firstParagraphIndex = blocks.findIndex(block => block.type === "paragraph")
-    blocks[firstParagraphIndex].data.into = true
+    if (firstParagraphIndex !== -1) {
+        blocks[firstParagraphIndex].data.into = true
+    }
     return blocks.reduce((acc, cur) => 
         acc + mapTemplate(cur)
     , '')
@@ -81,16 +78,23 @@ const app = {
         appRouteCallbacks[pattern] = callback
     },
     visit: (url, pushState=true) => {
-        const {origin, pathname} = new URL(url)
+        const {origin, pathname, hash} = new URL(url)
         const isInternalUrl = origin === document.location.origin
         if (isInternalUrl) {
             //Override browser behavior
-            if(pushState) {
-                window.history.pushState('History Item Name', 'New Page Title', url)
+            try {
+                if(pushState) {
+                    window.history.pushState('History Item Name', 'New Page Title', url)
+                }
+                const paramsUrl = origin + '/params' + pathname + hash
+                const response = hfmd.get(paramsUrl)
+                appRouteCallbacks[response.routePattern](response.params)
+                console.log('%c🛴 Fast naving!', 'padding: 5px; background:#cc85ff; color:#000000', pathname)
+            } catch (error) {
+                clientError(error)
+                window.history.back()
+                return
             }
-            const paramsUrl = origin + '/params' + pathname
-            const response = hfmd.get(paramsUrl)
-            appRouteCallbacks[response.routePattern](response.params)
         } else {
             //Do normal load
             window.location.href = url
@@ -107,21 +111,23 @@ const app = {
             }
         }
     },
-    preload: (url) => {
+    preload: (url, uniqueClass = '') => {
         const {origin, pathname} = new URL(url)
         const isInternalUrl = origin === document.location.origin
         if (isInternalUrl) {
             const paramsUrl = origin + '/params' + pathname
             const response = hfmd.get(paramsUrl)
             appRouteCallbacks[response.routePattern](response.params, true)
+            const element = document.querySelector('.' + uniqueClass)
+            console.log('%c🦴 Link preload: ' + pathname, 'padding: 5px; background:#85d2ff; color:#000000', {element})
         }
     },
-    visitWithPreload: (url) => {
+    visitWithPreload: (url, uniqueClass) => {
         setTimeout(() => {
             if (app.isReady) {
-                app.preload(url)
+                app.preload(url, uniqueClass)
             } else {
-                app.preloadQueue.push(() => app.preload(url))
+                app.preloadQueue.push(() => app.preload(url, uniqueClass))
             }
         }, 0)
         
@@ -132,65 +138,82 @@ const app = {
 window.hfmd.app = app
 
 const clientError = (error) => {
-    console.warn('%c error!', 'padding: 5px; background:#ff85cc; color:#000000', error)
+    console.warn('%c☄️ error!', 'padding: 5px; background:#ff85cc; color:#000000', error)
+}
+
+const setIsMobile = (userAgent) => {
+    const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+    state.set('isMobile', isMobile)
+    state.set('activeStyle', isMobile ? style.mobileStyle : style.defaultStyle)
+}
+
+const setAllowedModels = (allowedModels) => {
+    state.set('allowedModels', allowedModels)
 }
 
 const runApp = () => {
     setIsMobile(window.navigator.userAgent)
+    setAllowedModels(allowedModels)
 
     app.get(routes.root, (_, preload=false) => {
         if (!preload) {
-            const titleHtml = template.site.home({models: allowedModels})
-            const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml})
-
-            document.body = Element.html(wrappedBodyHtml)
+            home.render()
         }
     })
 
     app.get(routes.modelIndex, (params, preload=false) => {
-        const model = params.model
-        const fields = encodeURIComponent(['id','Title'].join(', '))
-        const statePath = `cms.api.${model}.index`
-        const requestPath = `/data/${model}?fields=${fields}`
-
-        const loadStateData = (trigger) => {
-            if (!state.get(statePath)) {
-                hfmd.getPromise(requestPath).then(
-                    response => state.set(statePath, response.data, trigger),
-                    error => clientError(error)
-                )
-            }
-        }
-
-        const subscribe = (trigger) => {
-            if (state.getSub(statePath).length == 0) {
-                state.sub(statePath, (value, previousValue, path, relativePath) => {
-                    const headHtml = template.site.htmlHead({title: model})
-                    const titleHtml = template.site.title({title: model})
-                    const modelIndexHtml = template.site.modelIndex({model, data: value})
-                    const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + modelIndexHtml})
-            
-                    document.body = Element.html(headHtml + wrappedBodyHtml)
-                }, trigger)
-            }
-        }
-
-        if (preload) {
-            loadStateData(false)
-            subscribe(false)
-        } else if (!state.get(statePath)) {
-            loadStateData(true)
-            subscribe(true)
-        } else {
-            state.trigger(statePath)
+        const modelName = params.model
+        modelIndex.init(modelName)
+        modelIndex.preload()
+        if (!preload) {
+            modelIndex.render()
         }
     })
 
+    // app.get(routes.modelIndex, (params, preload=false) => {
+    //     const modelName = params.model
+    //     const fields = encodeURIComponent(['id','Title'].join(', '))
+    //     const statePath = `cms.api.${modelName}.index`
+    //     const requestPath = `/data/${modelName}?fields=${fields}`
+
+    //     const loadStateData = (trigger) => {
+    //         if (!state.get(statePath)) {
+    //             hfmd.getPromise(requestPath).then(
+    //                 response => state.set(statePath, response.data, trigger),
+    //                 error => clientError(error)
+    //             )
+    //         }
+    //     }
+
+    //     const subscribe = (trigger) => {
+    //         if (state.getSub(statePath).length == 0) {
+    //             state.sub(statePath, (value, previousValue, path, relativePath) => {
+    //                 const headHtml = template.site.htmlHead({title: modelName})
+    //                 const titleHtml = template.site.title({title: modelName})
+    //                 const modelIndexHtml = template.site.modelIndex({modelName, data: value})
+    //                 const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + modelIndexHtml})
+            
+    //                 document.body = Element.html(headHtml + wrappedBodyHtml)
+    //             }, trigger)
+    //         }
+    //     }
+
+    //     if (preload) {
+    //         loadStateData(false)
+    //         subscribe(false)
+    //     } else if (!state.get(statePath)) {
+    //         loadStateData(true)
+    //         subscribe(true)
+    //     } else {
+    //         state.trigger(statePath) // This should probably trigger this subscribe only instead of all subscribes
+    //     }
+    // })
+
     app.get(routes.modelDetails, (params, preload=false) => {
-        const model = params.model
+        const modelName = params.model
         const id = params.id
-        const statePath = `cms.api.${model}.${id}`
-        const requestPath = `/data/${model}/${id}`
+        const statePath = `cms.api.${modelName}.${id}`
+        const requestPath = `/data/${modelName}/${id}`
 
         const loadStateData = (trigger) => {
             if (!state.get(statePath)) {
@@ -207,7 +230,7 @@ const runApp = () => {
                     const titleHtml = template.site.breadcrumb({
                         id: value.id,
                         title: value.attributes.Title,
-                        model
+                        model: modelName
                     })
                     const editorJsBody = value.attributes.Body
                     const bodyHtml = renderEditorJs(editorJsBody.blocks)
@@ -228,9 +251,9 @@ const runApp = () => {
             state.trigger(statePath)
         }
     })
-
-    app.ready() 
-    console.log('%c app running!', 'padding: 5px; background:#85ffcc; color:#000000')
+    
+    app.ready() //👄✌️🕶👟📐☄️🪐🐉🌵🐓🌊🛹🪩🛴🫠🤙🍗🦴
+    console.log('%c🤙 app running!', 'padding: 5px; background:#85ffcc; color:#000000')
 }
 
 export const run = runApp()

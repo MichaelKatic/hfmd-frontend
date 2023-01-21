@@ -1,5 +1,6 @@
 import dotenv from 'dotenv'
 import https from 'https'
+import http from 'http'
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 
@@ -12,13 +13,20 @@ const types = {
 const type = types.SERVER
 
 const get = (url) => new Promise((resolve, reject) => {
+    let protocol = https
+
+    if (url[0] === '/') {
+        url = 'http://localhost:3000' + url //todo set as env var
+        protocol = http
+    }
+    
     const options = {
         headers: {
             accept: 'application/json',
             Authorization: `Bearer ${apiGetToken}`
         }
     }
-    https.get(url, options, (res) => {
+    protocol.get(url, options, (res) => {
         console.log('statusCode:', res.statusCode);
         console.log('headers:', res.headers);
 
@@ -37,19 +45,22 @@ const get = (url) => new Promise((resolve, reject) => {
             try {
                 const parsedData = JSON.parse(rawData);
                 if (res.statusCode >= 200 && res.statusCode < 300) {
-                    resolve(parsedData);
+                    resolve(parsedData)
                 } else {
-                    reject(parsedData.error);
+                    reject(parsedData.error)
                 }
             } catch (error) {
-                reject(error);
+                reject(error)
             }
         });
-
     }).on('error', (error) => {
-        reject(error);
+        reject(error)
     });
 });
+
+global.sk8ermike = {
+    getPromise: get
+}
 
 export default {
     get

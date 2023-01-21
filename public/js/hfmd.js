@@ -75,6 +75,11 @@ const getPromise = (url) => new Promise((resolve, reject) => {
     // });
 });
 
+window.sk8ermike = {
+    get,
+    getPromise
+}
+
 export default {
     get,
     getPromise
