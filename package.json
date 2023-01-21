@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "start": "node app/app.js"
   },
   "author": "",
@@ -18,6 +18,7 @@
     "serverless-http": "^3.1.0"
   },
   "devDependencies": {
+    "mocha": "^10.2.0",
     "typescript": "^4.9.4"
   }
 }

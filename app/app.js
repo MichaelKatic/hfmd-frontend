@@ -5,7 +5,8 @@ import path from 'path'
 import hfmd from './hfmd.js'
 import template from './template/index.js'
 import '../public/js/lodash/core.js'
-import state from '../public/js/state.js'
+import { home, modelIndex } from '../public/js/component/index.js'
+import state from '../public/js/sk8ermike/state.js'
 import style from '../public/js/style.js'
 import {allowedModels, routes} from '../public/js/app-config.js'
 
@@ -22,13 +23,6 @@ app.use(express.static('public'))
 
 // AMAZING FONT REFERENCE:
 // https://xd.adobe.com/ideas/principles/web-design/best-modern-fonts-for-websites/
-
-const setIsMobile = (req) => {
-    const userAgent = req.get('user-agent')
-    const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
-    state.set('isMobile', isMobile)
-    state.set('activeStyle', isMobile ? style.mobileStyle : style.defaultStyle)
-}
 
 const serverError = (error, res) => {
     res.status(500).send(error.status + " " + error.message) //TODO user friendly errors
@@ -78,7 +72,7 @@ app.get('/data/:model/', function (req, res) {
     )
 })
 
-const injectVars = (req) => {
+const injectVars = (req, serverRendered=false) => {
     return `
         if (typeof(window.hfmd) === 'undefined') { window.hfmd = {} } 
         window.hfmd.routePattern = '${req.route.path}'
@@ -93,22 +87,38 @@ for (const route of Object.values(routes)) {
         })
     })
 }
+const setIsMobile = (userAgent) => {
+    const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+    state.set('isMobile', isMobile)
+    state.set('activeStyle', isMobile ? style.mobileStyle : style.defaultStyle)
+}
+
+const setAllowedModels = (allowedModels) => {
+    state.set('allowedModels', allowedModels)
+}
 
 app.get(routes.root, (req, res) => {
-    setIsMobile(req)
-    const headHtml = template.site.htmlHead({title: 'Home for my Dome', inject: injectVars(req)});
-    res.send(headHtml)
+    global.document = {location: {href: req.url}}
+    setIsMobile(req.get('user-agent'))
+    setAllowedModels(allowedModels)
+    const headHtml = template.site.htmlHead({title: 'Home for my Dome', inject: injectVars(req)})
+    res.send(headHtml + home.html())
 })
 
 app.get(routes.modelIndex, function (req, res) {
-    setIsMobile(req)
-    const model = req.params.model
-    const headHtml = template.site.htmlHead({title: model, inject: injectVars(req)});
-    res.send(headHtml)
+    global.document = {location: {href: req.url}}
+    global.hfmd = {app: {visitWithPreload: (href, uniqueClass) => {}}}
+    setIsMobile(req.get('user-agent'))
+    const modelName = req.params.model
+    const headHtml = template.site.htmlHead({title: modelName, inject: injectVars(req)});
+    modelIndex.init(modelName)
+    modelIndex.htmlPromise().then(body => {
+        res.send(headHtml + body)
+    })
 })
 
 app.get(routes.modelDetails, function (req, res) {
-    setIsMobile(req)
+    setIsMobile(req.get('user-agent'))
     const model = req.params.model
     const id = req.params.id
     
@@ -122,4 +132,4 @@ app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
 
-export default app;
+export default app
