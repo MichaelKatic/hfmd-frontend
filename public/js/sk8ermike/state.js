@@ -6,10 +6,21 @@ import '../lodash/core.js'
 
 let globalSpace = typeof(window) !== 'undefined' ? window : global
 
+const copy = value => {
+    if (typeof value === 'object') {
+        return JSON.parse(JSON.stringify(value))
+    } else {
+        return value
+    }
+}
+
 class State {
     static #look = '👀' // Use varaible that is super likely to be unused. If this is causing you a bug I have no sympathy. 
-    static look(stateProxyItem) {
-        return stateProxyItem[State.#look]()
+    static look(lookObject) {
+        return (lookObject[State.#look] || (()=>undefined))()
+    }
+    static setLook(lookObject, lookValue) {
+        lookObject[State.#look] = () => lookValue
     }
     static get instance() {
         if (globalSpace.state === undefined)
@@ -27,7 +38,7 @@ class State {
         const getProxy = (stateProperty, path = '') => {
             return new Proxy(stateProperty, {
                 get(target, property) { 
-                    let result = JSON.parse(JSON.stringify(target[property]))
+                    let result = copy(target[property])
                     if (/*target.hasOwnProperty(property) &&*/ property !== State.#look) {
                         const newPath = path + (path === '' ? '' : '.') + property
                         if (result instanceof Object) {
@@ -35,7 +46,7 @@ class State {
                         } else {
                             result = {}
                         }
-                        result[State.#look] = () => ({ // Could make this a proxy. Store path of state in proxy for lookup.
+                        State.setLook(result, { // Could make this a proxy. Store path of state in proxy for lookup.
                             value: result,
                             path: newPath
                         })
@@ -107,40 +118,67 @@ class State {
     }
 
     set(path, value, trigger=true) { // Disable triggerSubs for things like preloading.
-        const previousValue =  _.get(State.instance.state, path)
+        const previousValue =  copy(_.get(State.instance.state, path))
         if (previousValue !== value) {
             // Update the state
             console.log('%c🍗 State updated: ' + path, 'padding: 5px; background:#85ccff; color:#000000')
             console.log('\tfrom: ', previousValue)
             console.log('\tto: ', value)
-            _.set(State.instance.state, path, value)
+            _.setWith(State.instance.state, path, value, Object)
 
             if (trigger) {
                 // State changed trigger callback subscriptions
+
+                // Trigger callbacks up the tree
                 const pathArray = path.split(/(?=[\.,[])/g) // convert 'cms.api[9].blogs.2' to ['cms', '.api', '[9]', '.blogs', '.2']
                 while (pathArray.length > 0) { // Find all callbacks in path heirarchy
-                    const subPath = pathArray.join('')
+                    const upPath = pathArray.join('')
                     pathArray.pop()
-                    if (_.has(State.instance.subs, subPath)) {
-                        const pathValue = _.get(State.instance.subs, subPath)
-                        if (Array.isArray(pathValue)) {
-                            pathValue.forEach(callback => {
-                                if (typeof(callback) === 'function') {
-                                    const valueInState = _.get(State.instance.state, subPath)
-                                    const relativePath = path.substring(subPath.length + 1)
-                                    let previousValueInState;
-                                    if (typeof previousValue !== 'object') {
+                    if (_.has(State.instance.subs, upPath)) {
+                        for(const callback of this.getSubs(upPath)) {
+                        // const subCallbacks = this.getSubs(subPath)
+                        // if (Array.isArray(subCallbacks)) {
+                        //     subCallbacks.forEach(callback => {
+                                // if (typeof(callback) === 'function') {
+                                    const valueInState = copy(_.get(State.instance.state, upPath))
+                                    const relativePath = path.substring(upPath.length + 1)
+                                    let previousValueInState
+                                    if (relativePath === '') {
                                         previousValueInState = previousValue
-                                    }else if (relativePath == '') { 
-                                        previousValueInState = JSON.parse(JSON.stringify(previousValue))
                                     } else {
-                                        previousValueInState = JSON.parse(JSON.stringify(valueInState))
-                                        _.set(previousValueInState, relativePath, previousValue)
+                                        previousValueInState = copy(valueInState)
+                                        _.setWith(previousValueInState, relativePath, copy(previousValue), Object)
                                     }
                                     callback(valueInState, previousValueInState, path, relativePath)
-                                }
-                            })
+                                // }
+                            // })
+                        // }
                         }
+                    }
+                }
+
+                // Trigger callbacks down the tree
+                const getPaths = (someObject, path = '') => {
+                    let paths = []
+                    if (typeof someObject === 'object') {
+                        for (const prop in someObject) { 
+                            if (prop !== State.#look) {
+                                const propPath = path === '' ? prop : path + '.' + prop
+                                paths.push(propPath)
+                                paths = paths.concat(getPaths(someObject[prop], propPath))
+                            }
+                        }
+                    }
+                    return paths
+                }
+
+                const subObject = _.get(State.instance.subs, path)
+                for (const relativeDownPath of getPaths(subObject)) {
+                    const fullDownPath = path + (path !== '' ? '.' : '') + relativeDownPath
+                    for(const callback of this.getSubs(fullDownPath)) {
+                        const valueInState = _.get(State.instance.state, fullDownPath)
+                        const previousValueInState = _.get(previousValue, relativeDownPath)
+                        callback(valueInState, previousValueInState, fullDownPath, '')
                     }
                 }
             }
@@ -151,15 +189,22 @@ class State {
         return _.get(State.instance.state, path)
     }
 
-    getSub(path) { 
-        return _.get(State.instance.subs, path) || []
+    getSubs(path) {  
+        let subsCallbacks = []
+        if (_.has(State.instance.subs, path)) {
+            const subLookObject = _.get(State.instance.subs, path)
+            subsCallbacks = State.look(subLookObject) || []
+        }
+        return subsCallbacks
     }
 
     sub(path, callback, trigger) {
-        let callbacks = _.get(State.instance.subs, path) || []
-        if (!callbacks.includes(callback)) {
-            callbacks.push(callback)
-            _.set(State.instance.subs, path, callbacks)
+        const subLookObject = _.get(State.instance.subs, path) || {}
+        const subCallbackList = State.look(subLookObject) || []
+        if (!subCallbackList.includes(callback)) {
+            subCallbackList.push(callback)
+            State.setLook(subLookObject, subCallbackList) 
+            _.setWith(State.instance.subs, path, subLookObject, Object)
 
             if (trigger && isPopulated([path])) {
                 //If value exists call callback immediatly
@@ -170,7 +215,7 @@ class State {
     }
 
     trigger(path) {
-        const callbacks = _.get(State.instance.subs, path)
+        const callbacks = getSubs(path)
         const value = _.get(State.instance.state, path)
 
         if (callbacks !== undefined) {
@@ -188,9 +233,8 @@ export const useState = (paths, onChange = ()=>{}, triggerSub = true) => {
     for (const property in paths) {
         const path = paths[property]
         if (!_.has(State.instance.state, path)) {
-            _.set(State.instance.state, path, null) // Set state without trigginging subscriptions
+            _.setWith(State.instance.state, path, null, Object) // Set state without trigginging subscriptions
         }
-
         response[property] = _.get(State.instance.stateProxy, path)
         State.instance.sub(path, onChange, triggerSub)
     }

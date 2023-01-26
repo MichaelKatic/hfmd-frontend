@@ -6,7 +6,7 @@ class View {
     #name = ''
     #enabled = false;
     #preloaded = false;
-    #promisesToState = []
+    #promiseToState = ()=>{}
     #stateToLocalsMap = {} // localVar: 'some.state.path'
     #localsToStateMap = {} // 'some.state.path': 'localVar'
     #stateWatcher = {}
@@ -15,23 +15,26 @@ class View {
 
     get name() { return this.#name }
     get stateWatcher() { return this.#stateWatcher } //TODO don't know if this is needed.
+    get locals() { return this.#locals }
 
     constructor(name) {
         this.#name = name
     }
 
     promiseToState(promise, then, path, overwrite = false, triggerSubs = true) {
-        this.#promisesToState.push(() => {
+        this.#promiseToState = () => {
             if (overwrite || !isPopulated([path])) {
                 promise().then(
                     function () { 
-                        state.set(path, then(...arguments), triggerSubs)
+                        const promiseResult = then(...arguments)
+                        state.set(path, promiseResult, triggerSubs) //TODO if promise returns error, then will fail. Catch and do something else.
+                        console.log(`%c🌵 Promise Resolved`, 'padding: 5px; background:#ef85ff; color:#000000', { promiseResult })
                      }
                 ).catch(
                     error => console.warn('%c☄️ error!', 'padding: 5px; background:#ff85cc; color:#000000', error)
                 )
             }
-        })
+        }
     }
 
     stateToLocals(stateToLocalsMap) {
@@ -45,7 +48,7 @@ class View {
     preload() {
         if (!this.#preloaded) {
             this.#preloaded = true
-            this.#promisesToState.forEach(promise => promise()) // Call all promises
+            this.#promiseToState()
         }
     }
 
@@ -53,7 +56,7 @@ class View {
         if (!this.#enabled) {
             this.#enabled = true
             this.preload()
-            useState(this.#stateToLocalsMap, this.onStateChanged) // subscribe to state changes
+            useState(this.#stateToLocalsMap, this.onStateChanged) // subscribe to state changes. This triggers the html to render and preload links on the page. So we don't want to do this until we're on the page.
             // this.#stateWatcher = useState(this.#stateToLocalsMap, this.onStateChanged) // subscribe to state changes
         }
     }
@@ -85,6 +88,7 @@ class View {
 
         // if (this.#enabled) {
             if (this.localsReady()) {
+                console.log(`%c🌵 Locals ready`, 'padding: 5px; background:#ef85ff; color:#000000', { view: this })
                 this.localsToHtml(this.#locals)
             }
         // }
@@ -108,6 +112,7 @@ class View {
     onRender(render) {
         this.localsToHtml = (locals) => {
             this.#html = render(locals)
+            console.log(`%c🌵 HTML Rendered`, 'padding: 5px; background:#ef85ff; color:#000000', { view: this })
             this.onRenderPromise(this.#html)
             this.onRenderPromise = () => {} // Stop this from potentially calling resolve multiple times.
         }
@@ -120,14 +125,14 @@ class View {
 
     html () { return this.#html }
 
-    htmlPromise () {
+    htmlPromise (addedReturn) {
         return new Promise(resolve => {
             if (this.#html !== undefined) {
-                resolve(this.#html)
+                resolve([this.#html, addedReturn])
             } else {
                 this.onRenderPromise = (html) => {
-                    resolve(html)
-                    // this.onRenderPromise(html)
+                    resolve([html, addedReturn])
+                    // this.onRenderPromise(html) // TODO think I need this but it's creating an infinite loop
                 }
             }
         })
@@ -138,64 +143,98 @@ export default class Component {
 
     // enabled = false;
     rootNodeSelector = undefined
-    rootNode() { return typeof document !== 'undefined' ? document.querySelector(this.rootNodeSelector) : undefined }
+    descriptor = 'Component'
+    preloadOnly = false;
+    getRootNode() { return typeof document !== 'undefined' ? document.querySelector(this.rootNodeSelector) : undefined }
     views = {}
     addView() {
-        this.views[arguments[0]] = new View(...arguments)
+        const newView = new View(...arguments)
+        this.views[arguments[0]] = newView
+        return newView
     }
     getView(viewName) { 
-        let view = this.views.default;
-        if (viewName !== undefined) {
-            view = this.views[viewName]
-            if (view === undefined) {
-                // Set view property if nonexistant
-                view = this.addView(viewName)
-            }
+        viewName = viewName || 'default'
+        let view = this.views[viewName]
+        if (view === undefined) {
+            // Set view property if nonexistant
+            view = this.addView(viewName)
         }
         return view
     }
 
-    constructor(rootNodeSelector) {
+    static componentDictionarty = {}
+
+    constructor(baseArguments, disableLookup=false) {
+        let extendedComponent = this.constructor.name !== Component.name
+
+        if (baseArguments !== undefined && !disableLookup) {
+            // If called with arguments return existing componet with same arguments. 
+            const key = JSON.stringify({
+                constructor: this.constructor.name,
+                arguments: baseArguments
+            })
+            const existingComponent = Component.componentDictionarty[key]
+            if (existingComponent !== undefined) {
+                return existingComponent
+            } else {
+                Component.componentDictionarty[key] = this
+            }
+        }
+
+        this.descriptor = this.constructor.name + (extendedComponent ? ` (${Component.name}})` : '')
+
+        return this
+    }
+
+    rootNode(rootNodeSelector) {
         this.rootNodeSelector = rootNodeSelector
-        this.addView('default')
+        return this
     }
 
     promiseToState(promise, then, path, viewName = undefined, overwrite = false, triggerSubs = true) {
         const view = this.getView(viewName)
         view.promiseToState(promise, then, path, overwrite, triggerSubs)
+        return this
     }
     
     stateToLocals (stateToLocalsMap, viewName = undefined) {
         const view = this.getView(viewName)
         view.stateToLocals(stateToLocalsMap)
+        return this
     }
 
     onRender(render, viewName = undefined) {
         const view = this.getView(viewName)
         view.onRender(render)
+        return this
     }
 
-    preload(viewName = undefined) {
+    preload(preloadOnly, viewName = undefined) {
+        this.preloadOnly = !!preloadOnly
         const view = this.getView(viewName)
         view.preload()
+        return this
     }
 
     render(viewName = undefined) {
-        const view = this.getView(viewName)
-        view.enable()
-        view.htmlPromise().then((html) => {
-            const rootNode = this.rootNode()
-            rootNode.outerHTML = html
+        if (!this.preloadOnly) {
+            const view = this.getView(viewName)
+            view.enable()
+            view.htmlPromise().then((html) => {
+                const rootNode = this.getRootNode()
+                rootNode.outerHTML = html
 
-            // When replacing body an extra head is added so we have to remove it. 
-            // https://stackoverflow.com/questions/52888347/setting-document-body-outerhtml-creates-empty-heads-why
-            if (rootNode.tagName === 'BODY') {
-                const emptyHead = document.querySelector('head:empty')
-                if (emptyHead) {
-                    emptyHead.remove()
+                // When replacing body an extra head is added so we have to remove it. 
+                // https://stackoverflow.com/questions/52888347/setting-document-body-outerhtml-creates-empty-heads-why
+                if (rootNode.tagName === 'BODY') {
+                    const emptyHead = document.querySelector('head:empty')
+                    if (emptyHead) {
+                        emptyHead.remove()
+                    }
                 }
-            }
-        })
+            })
+        }
+        return this
     }
 
     html(viewName = undefined) {
@@ -207,6 +246,11 @@ export default class Component {
     htmlPromise(viewName = undefined) {
         const view = this.getView(viewName)
         view.enable()
-        return view.htmlPromise()
+        return view.htmlPromise(this)
+    }
+
+    locals(viewName = undefined) {
+        const view = this.getView(viewName)
+        return view.locals
     }
 }

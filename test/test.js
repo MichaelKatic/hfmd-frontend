@@ -1,5 +1,6 @@
 import assert from 'assert';
-import * as e from '../public/js/smalle/element.js'
+import * as eBase from '../public/js/smalle/element.js'
+import * as e from '../public/js/smalle-extended/element.js'
 
 const { 
     Element, $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr 

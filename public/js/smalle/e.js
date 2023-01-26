@@ -233,69 +233,6 @@ class Element {
 }
 Element.prototype.call = () => {} //Enables proxy to capture calls to instances of this class. 
 
-class Paragraph extends Element {
-    constructor(...args) {
-        return super('p', ...args)
-    }
-
-    //Extend funcitonality if you please. 
-}
-
-class Anchor extends Element {
-    constructor(...args) {
-        return super('a', ...args)
-    }
-
-    getFullUrl(href) {
-        let url = {}
-
-        try{
-            url = new URL(href)
-        } catch (error) {
-            try{
-                if (href[0] == '.') {
-                    url = new URL(document.location.origin + '/' + href)
-                } else if (href[0] == '/') {
-                    url = new URL(document.location.origin + href)
-                }
-            } catch (error) {
-                return undefined
-            }   
-        }
-
-        return url.href
-    }
-
-    render() {
-        let href = this.getFullUrl(this.attributes.href)
-        let hasLocalLink = href !== undefined && this.attributes.target !== '_blank'
-        const globalSpace = typeof(window) !== 'undefined' ? window : global
-        let isCurrentUrl = href === globalSpace.document.location.href
-
-        if (this.attributes.href[0] === '#') {
-            let hash = this.attributes.href.replace("'", "")
-            let url = document.location.href
-            const hashIndex = url.indexOf('#')
-            url = url.substring(0, hashIndex == -1 ? undefined : hashIndex) + hash
-            this.attributes.href = 'javascript:;'
-            this.attributes.onclick = `this.scrollIntoView(); window.history.pushState('Scroll', 'test title', '${url}');`
-        } else if (isCurrentUrl) {
-            this.attributes.href = '#'
-        } else if (hasLocalLink) {
-            // if href is a url targeted at this tab use optimized local app route
-            const randomString = () => Math.random().toString(36).replace('0.', '');
-            const uniqueClass = 'anchor_' + randomString();
-            this.attributes.class = (this.attributes.class || '') + ' ' + uniqueClass
-            this.attributes.href = 'javascript:;'
-            this.attributes.onclick = globalSpace.hfmd.app.visitWithPreload(href, uniqueClass)
-            // TODO add server side visit with preload like global.hfmd.app.visitWithPreload(href, uniqueClass)
-            // It will have to inject something into the headder to trigger preload after site loads.  
-        }
-
-        return super.render()
-    }
-}
-
 class H extends Element {
     #levelTag = ''
     #level = 1
@@ -318,23 +255,6 @@ class H extends Element {
         return super.renderEnd(this.#levelTag) 
     }
 }
-
-// const table = new Proxy(this, () => {
-//     get(target, property) //tricky way of settting content instead of getting anything
-//     {
-//         // console.log(target, property)
-
-//         if (!(property in target)) {
-//             return function() {                
-//                 target.attributes[property] = arguments[0]
-
-//                 return this
-//             }
-//         }
-
-//         return target[property];
-//     }
-// });
 
 const elementClassProxy = (tag) => { 
     return {
@@ -421,8 +341,8 @@ let $Tr = elementProxy(Element, 'tr')
 
 //Extended
 let $H = elementProxy(H)
-$P = elementProxy(Paragraph)
-$A = elementProxy(Anchor)
+// $P = elementProxy(Paragraph)
+// $A = elementProxy(Anchor)
 
 // const exportModules = {Element}
 
@@ -440,6 +360,7 @@ $A = elementProxy(Anchor)
 
 export {
     Element,
+    elementProxy,
     $A,
     $Body,
     $Div,

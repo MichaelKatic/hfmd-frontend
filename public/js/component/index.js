@@ -1,7 +1,9 @@
-import home from './home.js'
-import modelIndex from './model-index.js'
+import Home from './home.js'
+import ModelIndex from './model-index.js'
+import ModelDetail from './model-detail.js'
 
 export {
-    home,
-    modelIndex
+    Home,
+    ModelIndex,
+    ModelDetail
 }

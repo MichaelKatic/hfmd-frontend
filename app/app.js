@@ -2,13 +2,14 @@
 import express from 'express'
 import path from 'path'
 
-import hfmd from './hfmd.js'
-import template from './template/index.js'
 import '../public/js/lodash/core.js'
-import { home, modelIndex } from '../public/js/component/index.js'
+import hfmdCms from './hfmd-cms.js'
+import template from './template/index.js'
+import { Home, ModelIndex, ModelDetail } from '../public/js/component/index.js'
 import state from '../public/js/sk8ermike/state.js'
 import style from '../public/js/style.js'
 import {allowedModels, routes} from '../public/js/app-config.js'
+import Sk8erMike from '../public/js/sk8ermike/sk8ermike.js'
 
 const app = express()
 const port = 3000
@@ -42,13 +43,12 @@ app.get('/data/:model/:id', function (req, res) {
         return
     }
 
-    const parseEditorJsBody = (body) => {
-        body.replace('\\\\"', '\"').replace('\\"', '\'')
-        return JSON.parse(body)
-    }
-
-    hfmd.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
+    hfmdCms.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
         response => {
+            const parseEditorJsBody = (body) => {
+                body.replace('\\\\"', '\"').replace('\\"', '\'')
+                return JSON.parse(body)
+            }
             response.data.attributes.Body = parseEditorJsBody(response.data.attributes.Body)
             res.json(response)
         },
@@ -66,18 +66,11 @@ app.get('/data/:model/', function (req, res) {
         return
     }
 
-    hfmd.get(`https://cms.homeformydome.com/api/${model}?fields=${fields}`).then(
+    hfmdCms.get(`https://cms.homeformydome.com/api/${model}?fields=${fields}`).then(
         response => res.json(response),
         error => serverDataError(error, res)
     )
 })
-
-const injectVars = (req, serverRendered=false) => {
-    return `
-        if (typeof(window.hfmd) === 'undefined') { window.hfmd = {} } 
-        window.hfmd.routePattern = '${req.route.path}'
-        window.hfmd.params = ${JSON.stringify(req.params)}`
-}
 
 for (const route of Object.values(routes)) {
     app.get('/params' + route, function (req, res) {
@@ -87,6 +80,7 @@ for (const route of Object.values(routes)) {
         })
     })
 }
+
 const setIsMobile = (userAgent) => {
     const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
     state.set('isMobile', isMobile)
@@ -99,33 +93,40 @@ const setAllowedModels = (allowedModels) => {
 
 app.get(routes.root, (req, res) => {
     global.document = {location: {href: req.url}}
+    global.hfmd = {app: {visitWithPreload: (href, uniqueClass) => {}}}
     setIsMobile(req.get('user-agent'))
     setAllowedModels(allowedModels)
-    const headHtml = template.site.htmlHead({title: 'Home for my Dome', inject: injectVars(req)})
-    res.send(headHtml + home.html())
+
+    const homeHtml = new Home().html()
+    const headHtml = template.site.htmlHead({title: 'Home for my Dome', inject: Sk8erMike.req.injectVars(req)})
+    res.send(headHtml + homeHtml)
 })
 
-app.get(routes.modelIndex, function (req, res) {
+app.get(routes.modelIndex, async function (req, res) {
     global.document = {location: {href: req.url}}
     global.hfmd = {app: {visitWithPreload: (href, uniqueClass) => {}}}
     setIsMobile(req.get('user-agent'))
+
     const modelName = req.params.model
-    const headHtml = template.site.htmlHead({title: modelName, inject: injectVars(req)});
-    modelIndex.init(modelName)
-    modelIndex.htmlPromise().then(body => {
-        res.send(headHtml + body)
-    })
+    const headHtml = template.site.htmlHead({title: modelName, inject: Sk8erMike.req.injectVars(req)});
+    const [bodyHtml] = await new ModelIndex(modelName).htmlPromise()
+    res.send(headHtml + bodyHtml)
 })
 
-app.get(routes.modelDetails, function (req, res) {
+app.get(routes.modelDetails, async function (req, res) {
+    global.document = {location: {href: req.url}}
+    global.hfmd = {app: {visitWithPreload: (href, uniqueClass) => {}}}
     setIsMobile(req.get('user-agent'))
+
     const model = req.params.model
     const id = req.params.id
-    
-    //TODO get and populate title so it works with web scrapers. Maybe require title and image url in params
+    const [bodyHtml, component] = await new ModelDetail(model, id).htmlPromise()
+    const title = component.getTitle()
+    const headHtml = template.site.htmlHead({title: title, inject: Sk8erMike.req.injectVars(req)})
+    res.send(headHtml + bodyHtml)
 
-    const headHtml = template.site.htmlHead({title: 'client side rendering test', inject: injectVars(req)})
-    res.send(headHtml)
+    // TODO set preloaded in injectVars and dont reload the first page on the frontend. 
+    // That is currently why visitWithPreload isnt breaking right now
 })
 
 app.listen(port, () => {

@@ -4,7 +4,6 @@ const imageSizes = {
     medium: 'medium',
     thumbnail: 'thumbnail'
 }
-
 const imageSize = imageSizes.large
 const allowedModels = ['blogs']
 const routes = {

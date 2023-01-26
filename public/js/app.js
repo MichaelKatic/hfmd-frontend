@@ -1,67 +1,14 @@
-import hfmd from './hfmd.js'
-import template from './template/index.js'
-import { state } from './sk8ermike/index.js'
-import { Element, $P } from './smalle/element.js'
+import { state, Sk8erMike } from './sk8ermike/index.js'
 import style from './style.js'
 import { allowedModels, routes } from './app-config.js'
-import { home, modelIndex } from './component/index.js'
+import { Home, ModelIndex, ModelDetail } from './component/index.js'
 
-const templateDefault = ({id, type, data}) => 
-    $P.push(`id: ${id} type: ${type} data: ${JSON.stringify(data)}`).render()
-
-const mapTemplate = ({id, type, data}) => {    
-    const imageSize = {
-        large: 'large',
-        small: 'small',
-        medium: 'medium',
-        thumbnail: 'thumbnail'
-    }
-    const size = imageSize.large
-    switch(type) {
-        case 'paragraph': return template.editorJs.paragraph({id, type, data})
-        case 'header': return template.editorJs.header({id, type, data})
-        case 'image': {
-            switch(data.file.formats != null && data.file.formats[size] != null) {
-                case true: return template.editorJs.imageFormat(size)({id, type, data})
-                case false: return template.editorJs.image({id, type, data})
-            }
-        }
-        case 'list': {
-            switch(data.style) {
-                case 'unordered': return template.editorJs.listUnordered({id, type, data})
-                case 'ordered': return template.editorJs.listOrdered({id, type, data})
-            }
-        }
-        case 'embed': return template.editorJs.embed({id, type, data})
-        case 'delimiter': return template.editorJs.delimiter({id, type, data})
-        case 'table': return template.editorJs.table({id, type, data})
-        case 'code': return template.editorJs.code({id, type, data}) 
-        case 'raw': return template.editorJs.raw({id, type, data}) 
-        case 'LinkTool': return template.editorJs.link({id, type, data}) 
-        case 'checklist': return template.editorJs.checklist({id, type, data}) 
-    }
-    
-    return templateDefault({id, type, data})
-}
-
-const renderEditorJs = (blocks) => {
-    const firstParagraphIndex = blocks.findIndex(block => block.type === "paragraph")
-    if (firstParagraphIndex !== -1) {
-        blocks[firstParagraphIndex].data.into = true
-    }
-    return blocks.reduce((acc, cur) => 
-        acc + mapTemplate(cur)
-    , '')
-}
-
-if (window.history) {
-    var myOldUrl = window.location.href
+if (window.history) { //TODO Don't know if this code is doing anything
+    var previousUrl = window.location.href
     window.addEventListener('hashchange', function(){
-        window.history.pushState({}, null, myOldUrl)
+        window.history.pushState({}, null, previousUrl)
     })
 }
-
-const appRouteCallbacks = {}
 
 window.addEventListener('popstate', (event) => { 
     const url = document.location
@@ -70,12 +17,12 @@ window.addEventListener('popstate', (event) => {
 })
 
 const app = {
+    appRouteCallbacks: {},
     get: (pattern, callback) => { 
-        const routePattern = window.hfmd.routePattern
-        if (routePattern === pattern) {
-            callback(window.hfmd.params)
+        if (Sk8erMike.req.routePattern === pattern) {
+            callback(Sk8erMike.req.params)
         }
-        appRouteCallbacks[pattern] = callback
+        app.appRouteCallbacks[pattern] = callback
     },
     visit: (url, pushState=true) => {
         const {origin, pathname, hash} = new URL(url)
@@ -87,8 +34,8 @@ const app = {
                     window.history.pushState('History Item Name', 'New Page Title', url)
                 }
                 const paramsUrl = origin + '/params' + pathname + hash
-                const response = hfmd.get(paramsUrl)
-                appRouteCallbacks[response.routePattern](response.params)
+                const response = Sk8erMike.http.get(paramsUrl)
+                app.appRouteCallbacks[response.routePattern](response.params)
                 console.log('%c🛴 Fast naving!', 'padding: 5px; background:#cc85ff; color:#000000', pathname)
             } catch (error) {
                 clientError(error)
@@ -116,8 +63,8 @@ const app = {
         const isInternalUrl = origin === document.location.origin
         if (isInternalUrl) {
             const paramsUrl = origin + '/params' + pathname
-            const response = hfmd.get(paramsUrl)
-            appRouteCallbacks[response.routePattern](response.params, true)
+            const response = Sk8erMike.http.get(paramsUrl)
+            app.appRouteCallbacks[response.routePattern](response.params, true)
             const element = document.querySelector('.' + uniqueClass)
             console.log('%c🦴 Link preload: ' + pathname, 'padding: 5px; background:#85d2ff; color:#000000', {element})
         }
@@ -131,11 +78,11 @@ const app = {
             }
         }, 0)
         
-        return `window.hfmd.app.visit('${url}')`
+        return `window.sk8ermikeApp.visit('${url}')`
     }
 }
 
-window.hfmd.app = app
+window.sk8ermikeApp = app
 
 const clientError = (error) => {
     console.warn('%c☄️ error!', 'padding: 5px; background:#ff85cc; color:#000000', error)
@@ -156,103 +103,27 @@ const runApp = () => {
     setAllowedModels(allowedModels)
 
     app.get(routes.root, (_, preload=false) => {
-        if (!preload) {
-            home.render()
-        }
+        new Home()
+            .preload(preload)
+            .render()
     })
 
     app.get(routes.modelIndex, (params, preload=false) => {
         const modelName = params.model
-        modelIndex.init(modelName)
-        modelIndex.preload()
-        if (!preload) {
-            modelIndex.render()
-        }
+        new ModelIndex(modelName)
+            .preload(preload)
+            .render()
     })
 
-    // app.get(routes.modelIndex, (params, preload=false) => {
-    //     const modelName = params.model
-    //     const fields = encodeURIComponent(['id','Title'].join(', '))
-    //     const statePath = `cms.api.${modelName}.index`
-    //     const requestPath = `/data/${modelName}?fields=${fields}`
-
-    //     const loadStateData = (trigger) => {
-    //         if (!state.get(statePath)) {
-    //             hfmd.getPromise(requestPath).then(
-    //                 response => state.set(statePath, response.data, trigger),
-    //                 error => clientError(error)
-    //             )
-    //         }
-    //     }
-
-    //     const subscribe = (trigger) => {
-    //         if (state.getSub(statePath).length == 0) {
-    //             state.sub(statePath, (value, previousValue, path, relativePath) => {
-    //                 const headHtml = template.site.htmlHead({title: modelName})
-    //                 const titleHtml = template.site.title({title: modelName})
-    //                 const modelIndexHtml = template.site.modelIndex({modelName, data: value})
-    //                 const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + modelIndexHtml})
-            
-    //                 document.body = Element.html(headHtml + wrappedBodyHtml)
-    //             }, trigger)
-    //         }
-    //     }
-
-    //     if (preload) {
-    //         loadStateData(false)
-    //         subscribe(false)
-    //     } else if (!state.get(statePath)) {
-    //         loadStateData(true)
-    //         subscribe(true)
-    //     } else {
-    //         state.trigger(statePath) // This should probably trigger this subscribe only instead of all subscribes
-    //     }
-    // })
-
-    app.get(routes.modelDetails, (params, preload=false) => {
+    app.get(routes.modelDetails, (params, preload=false) => {    
         const modelName = params.model
         const id = params.id
-        const statePath = `cms.api.${modelName}.${id}`
-        const requestPath = `/data/${modelName}/${id}`
-
-        const loadStateData = (trigger) => {
-            if (!state.get(statePath)) {
-                hfmd.getPromise(requestPath).then(
-                    response => state.set(statePath, response.data, trigger),
-                    error => clientError(error)
-                )
-            }
-        }
-
-        const subscribe = (trigger) => {
-            if (state.getSub(statePath).length == 0) {
-                state.sub(statePath, (value, previousValue, path, relativePath) => {
-                    const titleHtml = template.site.breadcrumb({
-                        id: value.id,
-                        title: value.attributes.Title,
-                        model: modelName
-                    })
-                    const editorJsBody = value.attributes.Body
-                    const bodyHtml = renderEditorJs(editorJsBody.blocks)
-                    const wrappedBodyHtml = template.site.wrapperBody({content: titleHtml + bodyHtml})
-            
-                    document.body = Element.html(wrappedBodyHtml)
-                }, trigger)
-            }
-        }
-    
-        if (preload) {
-            loadStateData(false)
-            subscribe(false)
-        } else if (!state.get(statePath)) {
-            loadStateData(true)
-            subscribe(true)
-        } else {
-            state.trigger(statePath)
-        }
+        new ModelDetail(modelName, id)
+            .preload(preload)
+            .render()
     })
     
-    app.ready() //👄✌️🕶👟📐☄️🪐🐉🌵🐓🌊🛹🪩🛴🫠🤙🍗🦴
+    app.ready() //👄✌️🕶👟📐☄️🪐🐉🌵🌊🛹🪩🛴🫠🤙🪹🪺🥚🍳🐣🐥🐤🐓🍗🦴
     console.log('%c🤙 app running!', 'padding: 5px; background:#85ffcc; color:#000000')
 }
 

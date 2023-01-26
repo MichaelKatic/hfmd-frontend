@@ -1,24 +1,12 @@
 import dotenv from 'dotenv'
 import https from 'https'
-import http from 'http'
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 
 const apiGetToken = process.env.HFMD_API_TOKEN
-const types = {
-    SERVER: "server",
-    CLIENT: 'client'
-}
-
-const type = types.SERVER
 
 const get = (url) => new Promise((resolve, reject) => {
     let protocol = https
-
-    if (url[0] === '/') {
-        url = 'http://localhost:3000' + url //todo set as env var
-        protocol = http
-    }
     
     const options = {
         headers: {
@@ -27,8 +15,11 @@ const get = (url) => new Promise((resolve, reject) => {
         }
     }
     protocol.get(url, options, (res) => {
-        console.log('statusCode:', res.statusCode);
-        console.log('headers:', res.headers);
+        console.log({
+            url: url,
+            statusCode: res.statusCode,
+            headers: res.headers,
+        });
 
         res.on('data', (d) => {
             process.stdout.write(d);
@@ -57,10 +48,6 @@ const get = (url) => new Promise((resolve, reject) => {
         reject(error)
     });
 });
-
-global.sk8ermike = {
-    getPromise: get
-}
 
 export default {
     get
