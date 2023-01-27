@@ -56,8 +56,6 @@ class Anchor extends Element {
                 this.attributes.class = (this.attributes.class || '') + ' ' + uniqueClass
                 this.attributes.href = 'javascript:;'
                 this.attributes.onclick = window.sk8ermikeApp.visitWithPreload(href, uniqueClass)
-                // TODO add server side visit with preload like global.hfmd.app.visitWithPreload(href, uniqueClass)
-                // It will have to inject something into the headder to trigger preload after site loads.  
             }
         }
 

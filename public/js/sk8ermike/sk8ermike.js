@@ -19,6 +19,97 @@ export default class Sk8erMike {
 
         return this.instance;
     }
+
+    static globalCustomSetup(route, req, res) {}
+
+    static globalStateToLocals = {}
+
+    static globalSetup(customSetup, stateToLocals) {
+        Sk8erMike.globalCustomSetup = customSetup
+        Sk8erMike.globalStateToLocals = stateToLocals
+    }
+
+    static config(configuration, express) {
+        let app = Sk8erMike.app
+        const isServerConfig = express !== undefined
+        if (isServerConfig) {
+            const expressApp = express()
+            const routes = configuration.routes
+
+            for (const route of Object.values(routes)) {
+                expressApp.get('/params' + route, function (req, res) {
+                    res.json({
+                        routePattern: route,
+                        params: req.params
+                    })
+                })
+            }
+
+            const routeLookup = Object.keys(routes).reduce((acc, key) => {
+                const value = routes[key]
+                acc[value] = key
+                return acc
+            }, {})
+
+            const globalSk8erMikeSetup = (route, req, res) => {
+                const setIsMobile = (userAgent) => {
+                    let isMobile = false; 
+                    if (!!userAgent) {
+                        isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+                    }
+                    state.set('isMobile', isMobile)
+                }
+                setIsMobile(req.get('user-agent'))
+            }
+            
+            const exspressProxyHandler = {
+                get(target, prop, receiver) {
+                    if (prop === 'get') {
+                        const getWrapper = function() {
+                            const route = arguments[0]
+                            const callback = arguments[1]
+                            if (routeLookup[route] !== undefined) {
+                                const wrappedCallback = function (req, res) {
+                                    Sk8erMike.global.document = {location: {href: req.url}}
+
+                                    globalSk8erMikeSetup(route, req, res)
+                                    Sk8erMike.globalCustomSetup(route, req, res)
+
+                                    return callback(req, res)
+                                }
+                                return target[prop](route, wrappedCallback)
+                            } else {
+                                return target[prop](route, callback)
+                            }
+                        }
+                        return getWrapper
+                    }
+                    return target[prop]
+                },
+            };
+            app = new Proxy(expressApp, exspressProxyHandler);
+
+            // const oldGet = app.get
+            
+            // app.get = function () {
+            //     const route = arguments[0]
+            //     const callback = arguments[1]
+            //     if (routeLookup[route] !== undefined) {
+            //         const wrappedCallback = function (req, res) {
+            //             Sk8erMike.global.document = {location: {href: req.url}}
+            //             return callback(req, res)
+            //         }
+
+            //         globalSk8erMikeSetup(route, req, res)
+            //         Sk8erMike.globalCustomSetup(route, req, res)
+                    
+            //         oldGet(routeArg, wrappedCallback)
+            //     }
+            //     return oldGet(...arguments)
+            // }
+        }
+        return app
+    }
 }
 
 let clientInterface = {}
@@ -44,7 +135,7 @@ if (Sk8erMike.clientSide) {
 
     const app = {
         appRouteCallbacks: {},
-        get: (pattern, callback) => { 
+        get: (pattern, callback) => {
             if (Sk8erMike.req.routePattern === pattern) {
                 callback(Sk8erMike.req.params)
             }
@@ -198,10 +289,15 @@ if (Sk8erMike.serverSide) {
                     window.${globalDataName}.routePattern = '${req.route.path}'
                     window.${globalDataName}.params = ${JSON.stringify(req.params)}`
             }
+        },
+        app: { 
+            visitWithPreload: (href, uniqueClass) => {} // Do nothing. We'll wait for the client to re-render this page.
+            // TODO add server side visit with preload like global.hfmd.app.visitWithPreload(href, uniqueClass)
+            // It will have to inject something into the headder to trigger preload after site loads.  
+            // Then stop the client from doing the redundent render.
         }
     }
 }
-
 
 Sk8erMike.http = Sk8erMike.serverSide ? serverInterface.http : clientInterface.http
 Sk8erMike.req = Sk8erMike.serverSide ? serverInterface.req : clientInterface.req

@@ -1,17 +1,16 @@
 //External libs
 import express from 'express'
-import path from 'path'
 
 import '../public/js/lodash/core.js'
 import hfmdCms from './hfmd-cms.js'
 import template from './template/index.js'
+import { allowedModels, routes } from '../public/js/app-config.js'
+import { Sk8erMike, state } from '../public/js/sk8ermike/index.js'
 import { Home, ModelIndex, ModelDetail } from '../public/js/component/index.js'
-import state from '../public/js/sk8ermike/state.js'
 import style from '../public/js/style.js'
-import {allowedModels, routes} from '../public/js/app-config.js'
-import Sk8erMike from '../public/js/sk8ermike/sk8ermike.js'
 
-const app = express()
+const app = Sk8erMike.config({routes}, express)
+// const app = express()
 const port = 3000
 
 app.use(express.static('public'))
@@ -72,41 +71,20 @@ app.get('/data/:model/', function (req, res) {
     )
 })
 
-for (const route of Object.values(routes)) {
-    app.get('/params' + route, function (req, res) {
-        res.json({
-            routePattern: route,
-            params: req.params
-        })
-    })
-}
-
-const setIsMobile = (userAgent) => {
-    const isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
-    state.set('isMobile', isMobile)
-    state.set('activeStyle', isMobile ? style.mobileStyle : style.defaultStyle)
-}
-
-const setAllowedModels = (allowedModels) => {
-    state.set('allowedModels', allowedModels)
-}
+Sk8erMike.globalSetup(
+    (route, req, res) => {
+        state.set('activeStyle', state.get('isMobile') ? style.mobileStyle : style.defaultStyle)
+    },
+    { activeStyle: 'activeStyle' }
+)
 
 app.get(routes.root, (req, res) => {
-    global.document = {location: {href: req.url}}
-    global.hfmd = {app: {visitWithPreload: (href, uniqueClass) => {}}}
-    setIsMobile(req.get('user-agent'))
-    setAllowedModels(allowedModels)
-
-    const homeHtml = new Home().html()
+    const homeHtml = new Home(allowedModels).html()
     const headHtml = template.site.htmlHead({title: 'Home for my Dome', inject: Sk8erMike.req.injectVars(req)})
     res.send(headHtml + homeHtml)
 })
 
 app.get(routes.modelIndex, async function (req, res) {
-    global.document = {location: {href: req.url}}
-    global.hfmd = {app: {visitWithPreload: (href, uniqueClass) => {}}}
-    setIsMobile(req.get('user-agent'))
-
     const modelName = req.params.model
     const headHtml = template.site.htmlHead({title: modelName, inject: Sk8erMike.req.injectVars(req)});
     const [bodyHtml] = await new ModelIndex(modelName).htmlPromise()
@@ -114,19 +92,12 @@ app.get(routes.modelIndex, async function (req, res) {
 })
 
 app.get(routes.modelDetails, async function (req, res) {
-    global.document = {location: {href: req.url}}
-    global.hfmd = {app: {visitWithPreload: (href, uniqueClass) => {}}}
-    setIsMobile(req.get('user-agent'))
-
     const model = req.params.model
     const id = req.params.id
     const [bodyHtml, component] = await new ModelDetail(model, id).htmlPromise()
     const title = component.getTitle()
     const headHtml = template.site.htmlHead({title: title, inject: Sk8erMike.req.injectVars(req)})
     res.send(headHtml + bodyHtml)
-
-    // TODO set preloaded in injectVars and dont reload the first page on the frontend. 
-    // That is currently why visitWithPreload isnt breaking right now
 })
 
 app.listen(port, () => {

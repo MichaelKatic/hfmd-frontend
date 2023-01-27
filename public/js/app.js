@@ -1,7 +1,7 @@
 import { Sk8erMike, state } from './sk8ermike/index.js'
 import { allowedModels, routes } from './app-config.js'
-import style from './style.js'
 import { Home, ModelIndex, ModelDetail } from './component/index.js'
+import style from './style.js'
 
 const app = Sk8erMike.app
 
@@ -19,7 +19,7 @@ setIsMobile(window.navigator.userAgent)
 setAllowedModels(allowedModels)
 
 app.get(routes.root, (_, preload=false) => {
-    new Home()
+    new Home(allowedModels)
         .preload(preload)
         .render()
 })
