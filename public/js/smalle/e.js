@@ -164,10 +164,16 @@ class Element {
         }).join(' '));
     }    
 
-    renderContent(content) {
-        content = content || this.content
+    renderContent(content=null) {
+        if (content === null) {
+            content = this.content
+        }
+        if (content === undefined) {
+            return 
+        }
+
         if (Array.isArray(content)) {
-            return content.map(item => this.renderContent(item)).join('')
+            return content.map(item => this.renderContent(item === undefined ? '' : item)).join('')
         } else if (content instanceof Element) {
             return content.render()
         } else if (content.prototype === Element.prototype) {
@@ -330,7 +336,7 @@ let $Input = elementProxy(Element, 'input')
 let $Label = elementProxy(Element, 'label')
 let $Li = elementProxy(Element, 'li')
 let $Link = elementProxy(Element, 'link')
-let $P = elementProxy(Element, 'link')
+let $P = elementProxy(Element, 'p')
 let $Pre = elementProxy(Element, 'pre')
 let $Script = elementProxy(Element, 'script')
 let $Style = elementProxy(Element, 'style')
