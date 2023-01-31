@@ -1,12 +1,20 @@
 import dotenv from 'dotenv'
 import https from 'https'
+import http from 'http'
 
 dotenv.config() //Allows usage of process.env.YOUR_VARS
 
 const apiGetToken = process.env.HFMD_API_TOKEN
+const baseUrl = process.env.HFMD_URL
 
-const get = (url) => new Promise((resolve, reject) => {
+const get = (path) => new Promise((resolve, reject) => {
+    const url = baseUrl + path
+
     let protocol = https
+
+    if (baseUrl.startsWith('http://localhost')) {
+        protocol = http
+    }
     
     const options = {
         headers: {

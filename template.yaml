@@ -17,6 +17,7 @@ Resources:
       Environment:
         Variables:
           HFMD_API_TOKEN: e4d5575c1a051f0780b9ee554dff4736b44b1af730ad069511d115a5fb901088aa0e407e4c7d92b6a4c46fef7d164ab3aab534d5c10164173beccb457d9acb08fe8a36b2ef0f92d35eb9986daf43f89eaa3f69115bd04f1434aef77b28c2f4846d98dba42e978f3f712e47ff09892a935b5de68dcf42b6ce092c761631437fa9
+          HFMD_URL: https://cms.homeformydome.com
       Events:
         SimpleApp:
           Type: Api

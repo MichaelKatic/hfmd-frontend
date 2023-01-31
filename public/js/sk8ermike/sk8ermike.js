@@ -88,25 +88,6 @@ export default class Sk8erMike {
                 },
             };
             app = new Proxy(expressApp, exspressProxyHandler);
-
-            // const oldGet = app.get
-            
-            // app.get = function () {
-            //     const route = arguments[0]
-            //     const callback = arguments[1]
-            //     if (routeLookup[route] !== undefined) {
-            //         const wrappedCallback = function (req, res) {
-            //             Sk8erMike.global.document = {location: {href: req.url}}
-            //             return callback(req, res)
-            //         }
-
-            //         globalSk8erMikeSetup(route, req, res)
-            //         Sk8erMike.globalCustomSetup(route, req, res)
-                    
-            //         oldGet(routeArg, wrappedCallback)
-            //     }
-            //     return oldGet(...arguments)
-            // }
         }
         return app
     }
@@ -238,6 +219,10 @@ if (Sk8erMike.serverSide) {
         
                 if (url[0] === '/') {
                     url = 'http://localhost:3000' + url //todo set as env var
+                    // protocol = http
+                }
+
+                if (url.startsWith('http://localhost')) {
                     protocol = http
                 }
                 
@@ -267,7 +252,7 @@ if (Sk8erMike.serverSide) {
         
                     res.on('end', () => {
                         try {
-                            const parsedData = JSON.parse(rawData);
+                            const parsedData = JSON.parse(rawData); //TODO this fials when there is an error and http is returned instead of json
                             if (res.statusCode >= 200 && res.statusCode < 300) {
                                 resolve(parsedData)
                             } else {

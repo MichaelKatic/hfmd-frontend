@@ -9,8 +9,8 @@ import { Sk8erMike, state } from '../public/js/sk8ermike/index.js'
 import { Home, ModelIndex, ModelDetail } from '../public/js/component/index.js'
 import style from '../public/js/style.js'
 
-const app = Sk8erMike.config({routes}, express)
-// const app = express()
+const app = Sk8erMike.config({routes}, express) // TODO doc this. Just like using exspress: // const app = express(). Then can use skatermike or exspress routing!
+
 const port = 3000
 
 app.use(express.static('public'))
@@ -42,13 +42,15 @@ app.get('/data/:model/:id', function (req, res) {
         return
     }
 
-    hfmdCms.get(`https://cms.homeformydome.com/api/${model}/${id}`).then(
+    hfmdCms.get(`/api/${model}/${id}`).then(
         response => {
             const parseEditorJsBody = (body) => {
                 body.replace('\\\\"', '\"').replace('\\"', '\'')
                 return JSON.parse(body)
             }
             response.data.attributes.Body = parseEditorJsBody(response.data.attributes.Body)
+            console.log(`/api/${model}/${id}`)
+            console.log(response)
             res.json(response)
         },
         error => serverDataError(error, res)
@@ -65,7 +67,7 @@ app.get('/data/:model/', function (req, res) {
         return
     }
 
-    hfmdCms.get(`https://cms.homeformydome.com/api/${model}?fields=${fields}`).then(
+    hfmdCms.get(`/api/${model}?fields=${fields}`).then(
         response => res.json(response),
         error => serverDataError(error, res)
     )
