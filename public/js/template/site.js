@@ -1,33 +1,22 @@
 import { Element, $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr } from '../smalle-extended/e.js';
 import state from '../sk8ermike/state.js';
 
-const htmlHead = ({title}) => ''
-//    $Head([
-//         $Title(title),
-//         $Style(`
-//             .intro::first-letter {
-//                 ${state.activeStyle.firstLetter}
-//             }
-//         `),
-//         $Link.rel('stylesheet').type('text/css').href(`/css/style-${state.isMobile ? 'mobile' : 'desktop'}.css`),
-//         $Link.rel('stylesheet').type('text/css').href('/css/style.css'),
-//         $Link.rel('stylesheet').href('https://use.typekit.net/whq2zsc.css'), //Adobe font styles
-//         $Link.rel('icon').type('image/png').href('/favicon/coffee-16.ico'),
-//         // $Script('window.home = {}').type('text/javascript'),
-//         // $Script.type('application/javascript').src(`/js/jq/core.js`),
-//         $Script.type('application/javascript').src(`/js/lodash/core.js`),
-//         [
-//             'element/element.js',
-//             'hfmd.js',
-//             'lodash/core.js',
-//             'state.js',
-//             'style.js',
-//             'template/editor-js.js',
-//             'template/index.js',
-//             'template/site.js',
-//         ].map(file => $Script.type('module').src(`/js/${file}`).render()),
-//         $Script.type('module').src('/js/app.js').render(),
-//    ]).render()
+const htmlHead = ({title, inject=null}) => 
+    $Head([
+        $Title(title),
+        $Style(`
+            .intro::first-letter {
+                ${state.activeStyle.firstLetter}
+            }
+        `),
+        $Link.rel('stylesheet').type('text/css').href(`/css/style-${state.isMobile ? 'mobile' : 'desktop'}.css`).async(),
+        $Link.rel('stylesheet').type('text/css').href('/css/style.css').async(),
+        $Link.rel('stylesheet').href('https://use.typekit.net/whq2zsc.css').async(), //Adobe font styles
+        $Link.rel('icon').type('image/png').href('/favicon/coffee-16.ico').async(),
+        inject ? $Script(inject).type('application/javascript') : '',
+        $Script.type('application/javascript').src(`/js/lodash/core.js`),
+        $Script.type('module').src('/js/app.js'),
+    ]).render()
 
 const home = ({models}) => 
     $Div([

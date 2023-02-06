@@ -7,11 +7,6 @@ export default class Home extends Component {
         
         this.rootNode('body')
 
-        this.stateToLocals({
-            isMobile: 'isMobile',
-            activeStyle: 'activeStyle'
-        })
-
         this.onRender(() => {
             const titleHtml = site.home({models: allowedModels})
             const wrappedBodyHtml = site.wrapperBody({content: titleHtml})

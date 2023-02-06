@@ -1,3 +1,5 @@
+import { Component } from './index.js'
+
 const globalName = 'sk8ermike'
 const globalDataName = 'sk8ermikeData'
 const globalAppName = 'sk8ermikeApp'
@@ -22,18 +24,37 @@ export default class Sk8erMike {
 
     static globalCustomSetup(route, req, res) {}
 
-    static globalStateToLocals = {}
-
     static globalSetup(customSetup, stateToLocals) {
         Sk8erMike.globalCustomSetup = customSetup
-        Sk8erMike.globalStateToLocals = stateToLocals
+        // Component.globalStateToLocals = stateToLocals
+
+        if (Sk8erMike.clientSide) {
+            const globalSk8erMikeSetup = () => {
+                const setIsMobile = (userAgent) => {
+                    let isMobile = false; 
+                    if (!!userAgent) {
+                        isMobile = !!userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)
+                    }
+                    state.set('isMobile', isMobile)
+                }
+                setIsMobile(window.navigator.userAgent)
+
+                if (!('isMobile' in Component.globalStateToLocals)) {
+                    Component.globalStateToLocals['isMobile'] = 'isMobile'
+                }
+            }
+
+            globalSk8erMikeSetup()
+            Sk8erMike.globalCustomSetup()
+        }
     }
 
-    static config(configuration, express) {
+    static config(configuration, express, jsdom) {
         let app = Sk8erMike.app
         const isServerConfig = express !== undefined
         if (isServerConfig) {
             const expressApp = express()
+
             const routes = configuration.routes
 
             for (const route of Object.values(routes)) {
@@ -45,11 +66,12 @@ export default class Sk8erMike {
                 })
             }
 
-            const routeLookup = Object.keys(routes).reduce((acc, key) => {
-                const value = routes[key]
-                acc[value] = key
-                return acc
-            }, {})
+            const serverDomSetup = (href) => {
+                const dom = new jsdom.JSDOM(`<!DOCTYPE html>`)
+                const document = dom.window.document
+                document.location.href = href 
+                Sk8erMike.global.document = document
+            }
 
             const globalSk8erMikeSetup = (route, req, res) => {
                 const setIsMobile = (userAgent) => {
@@ -60,7 +82,17 @@ export default class Sk8erMike {
                     state.set('isMobile', isMobile)
                 }
                 setIsMobile(req.get('user-agent'))
+
+                if (!('isMobile' in Component.globalStateToLocals)) {
+                    Component.globalStateToLocals['isMobile'] = 'isMobile'
+                }
             }
+            
+            const routeLookup = Object.keys(routes).reduce((acc, key) => {
+                const value = routes[key]
+                acc[value] = key
+                return acc
+            }, {})
             
             const exspressProxyHandler = {
                 get(target, prop, receiver) {
@@ -68,14 +100,25 @@ export default class Sk8erMike {
                         const getWrapper = function() {
                             const route = arguments[0]
                             const callback = arguments[1]
+                            const autoResolve = arguments[2] !== undefined ? arguments[2] : true
                             if (routeLookup[route] !== undefined) {
-                                const wrappedCallback = function (req, res) {
-                                    Sk8erMike.global.document = {location: {href: req.url}}
+                                const wrappedCallback = async function (req, res) {
 
+                                    serverDomSetup('http://localhost/' + req.url)
                                     globalSk8erMikeSetup(route, req, res)
                                     Sk8erMike.globalCustomSetup(route, req, res)
 
-                                    return callback(req, res)
+                                    req.Sk8erMike = { preload: false }
+
+                                    const callbackResult = await callback(req, res)
+
+                                    if (autoResolve) {
+                                        Component.setRenderingCompleteCallbacks(()=>{
+                                            res.send(document.documentElement.innerHTML)
+                                        })
+                                    }
+
+                                    return callbackResult
                                 }
                                 return target[prop](route, wrappedCallback)
                             } else {
@@ -118,7 +161,11 @@ if (Sk8erMike.clientSide) {
         appRouteCallbacks: {},
         get: (pattern, callback) => {
             if (Sk8erMike.req.routePattern === pattern) {
-                callback(Sk8erMike.req.params)
+                const req = {
+                    params: Sk8erMike.req.params,
+                    Sk8erMike: { preload: false }
+                }
+                callback(req)
             }
             app.appRouteCallbacks[pattern] = callback
         },
@@ -133,7 +180,11 @@ if (Sk8erMike.clientSide) {
                     }
                     const paramsUrl = origin + '/params' + pathname + hash
                     const response = Sk8erMike.http.get(paramsUrl)
-                    app.appRouteCallbacks[response.routePattern](response.params)
+                    const req = {
+                        params: response.params,
+                        Sk8erMike: { preload: false }
+                    }
+                    app.appRouteCallbacks[response.routePattern](req)
                     console.log('%c🛴 Fast naving!', 'padding: 5px; background:#cc85ff; color:#000000', pathname)
                 } catch (error) {
                     clientError(error)
@@ -163,7 +214,11 @@ if (Sk8erMike.clientSide) {
             if (isInternalUrl) {
                 const paramsUrl = origin + '/params' + pathname
                 const response = Sk8erMike.http.get(paramsUrl)
-                app.appRouteCallbacks[response.routePattern](response.params, true)
+                const req = {
+                    params: response.params,
+                    Sk8erMike: { preload: true }
+                }
+                app.appRouteCallbacks[response.routePattern](req)
                 const element = document.querySelector('.' + uniqueClass)
                 console.log('%c🦴 Link preload: ' + pathname, 'padding: 5px; background:#85d2ff; color:#000000', {element})
             }
@@ -201,7 +256,8 @@ if (Sk8erMike.clientSide) {
         },
         req: {
             routePattern: window[globalDataName].routePattern,
-            params: window[globalDataName].params
+            params: window[globalDataName].params,
+            injectVars: () => {} //Should never do anything. 
         },
         app
     }

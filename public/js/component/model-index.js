@@ -18,8 +18,6 @@ export default class ModelIndex extends Component {
         )
 
         this.stateToLocals({
-            isMobile: 'isMobile',
-            activeStyle: 'activeStyle',
             index: statePath
         })
         

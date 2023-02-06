@@ -2,10 +2,18 @@ import state, { State, useState, isPopulated } from './state.js'
 
 const isServer = typeof global !== 'undefined' && typeof window === 'undefined'
 
+const copy = value => {
+    if (typeof value === 'object') {
+        return JSON.parse(JSON.stringify(value))
+    } else {
+        return value
+    }
+}
+
 class View {
     #name = ''
-    #enabled = false;
-    #preloaded = false;
+    #enabled = false
+    #preloaded = false
     #promiseToState = ()=>{}
     #stateToLocalsMap = {} // localVar: 'some.state.path'
     #localsToStateMap = {} // 'some.state.path': 'localVar'
@@ -19,6 +27,7 @@ class View {
 
     constructor(name) {
         this.#name = name
+        this.stateToLocals({})
     }
 
     promiseToState(promise, then, path, overwrite = false, triggerSubs = true) {
@@ -38,8 +47,11 @@ class View {
     }
 
     stateToLocals(stateToLocalsMap) {
-        this.#stateToLocalsMap = stateToLocalsMap
+        this.#stateToLocalsMap = copy(Component.globalStateToLocals)
         this.#localsToStateMap = {}
+        Object.entries(stateToLocalsMap).forEach(([key, value]) => {
+            this.#stateToLocalsMap[key] = value
+        })
         Object.entries(this.#stateToLocalsMap).forEach(([key, value]) => {
             this.#localsToStateMap[value] = key
         })
@@ -55,9 +67,14 @@ class View {
     enable() {
         if (!this.#enabled) {
             this.#enabled = true
-            this.preload()
-            useState(this.#stateToLocalsMap, this.onStateChanged) // subscribe to state changes. This triggers the html to render and preload links on the page. So we don't want to do this until we're on the page.
-            // this.#stateWatcher = useState(this.#stateToLocalsMap, this.onStateChanged) // subscribe to state changes
+
+            if (Object.keys(this.#stateToLocalsMap).length === 0) { // No locals associated with this component. Just render it. 
+                this.localsToHtml(this.#locals)
+            } else {
+                this.preload()
+                useState(this.#stateToLocalsMap, this.onStateChanged) // subscribe to state changes. This triggers the html to render and preload links on the page. So we don't want to do this until we're on the page.
+            }
+            // this.#stateWatcher = useState(this.#stateToLocalsMap, this.onStateChanged) // Another way to subscribe to state changes
         }
     }
 
@@ -163,6 +180,22 @@ export default class Component {
     }
 
     static componentDictionarty = {}
+    static rendering = 0
+    static renderingCompleteCallbacks = []
+    static setRenderingCompleteCallbacks(value) {
+        if (Component.rendering === 0) {
+            value()
+        } else { 
+            Component.renderingCompleteCallbacks.push(value)
+        }
+    }
+    static triggerRenderingCompleteCallback() {
+        for (const callback of Component.renderingCompleteCallbacks) {
+            callback()
+        } 
+        Component.renderingCompleteCallbacks = [];
+    }
+    static globalStateToLocals = {}
 
     constructor(baseArguments, disableLookup=false) {
         let extendedComponent = this.constructor.name !== Component.name
@@ -218,23 +251,36 @@ export default class Component {
 
     render(viewName = undefined) {
         if (!this.preloadOnly) {
-            const view = this.getView(viewName)
-            view.enable()
-            view.htmlPromise().then((html) => {
-                const rootNode = this.getRootNode()
-                rootNode.outerHTML = html
-
-                // When replacing body an extra head is added so we have to remove it. 
-                // https://stackoverflow.com/questions/52888347/setting-document-body-outerhtml-creates-empty-heads-why
-                if (rootNode.tagName === 'BODY') {
-                    const emptyHead = document.querySelector('head:empty')
-                    if (emptyHead) {
-                        emptyHead.remove()
-                    }
-                }
-            })
+            Component.rendering++
         }
-        return this
+
+        return new Promise(resolve => {
+            if (!this.preloadOnly) {
+                const view = this.getView(viewName)
+                view.enable()
+                view.htmlPromise().then((html) => {
+                    const rootNode = this.getRootNode()
+                    if (html !== undefined) {
+                        rootNode.outerHTML = html
+
+                        // When replacing body an extra head is added so we have to remove it. 
+                        // https://stackoverflow.com/questions/52888347/setting-document-body-outerhtml-creates-empty-heads-why
+                        if (rootNode.tagName === 'BODY') {
+                            const emptyHead = document.querySelector('head:empty')
+                            if (emptyHead) {
+                                emptyHead.remove()
+                            }
+                        }
+                    }
+
+                    resolve([html, this])
+                    Component.rendering--
+                    if (Component.rendering === 0) {
+                        Component.triggerRenderingCompleteCallback()
+                    }
+                })
+            }
+        })
     }
 
     html(viewName = undefined) {

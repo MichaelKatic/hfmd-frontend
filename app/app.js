@@ -1,15 +1,14 @@
 //External libs
 import express from 'express'
-
+import jsdom from 'jsdom'
 import '../public/js/lodash/core.js'
 import hfmdCms from './hfmd-cms.js'
-import template from './template/index.js'
 import { allowedModels, routes } from '../public/js/app-config.js'
 import { Sk8erMike, state } from '../public/js/sk8ermike/index.js'
-import { Home, ModelIndex, ModelDetail } from '../public/js/component/index.js'
+import { Head, Home, ModelIndex, ModelDetail } from '../public/js/component/index.js'
 import style from '../public/js/style.js'
 
-const app = Sk8erMike.config({routes}, express) // TODO doc this. Just like using exspress: // const app = express(). Then can use skatermike or exspress routing!
+const app = Sk8erMike.config({routes}, express, jsdom) // TODO doc this. Just like using exspress: // const app = express(). Then can use skatermike or exspress routing!
 
 const port = 3000
 
@@ -32,6 +31,14 @@ const serverDataError = (error, res) => {
     res.json({error: error})
 }
 
+const copy = value => {
+    if (typeof value === 'object') {
+        return JSON.parse(JSON.stringify(value))
+    } else {
+        return value
+    }
+}
+
 app.get('/data/:model/:id', function (req, res) {
     const model = req.params.model
     const id = req.params.id
@@ -44,14 +51,15 @@ app.get('/data/:model/:id', function (req, res) {
 
     hfmdCms.get(`/api/${model}/${id}`).then(
         response => {
+            const parsedResponse = copy(response) // Modifying the response object was causing an issue. 
             const parseEditorJsBody = (body) => {
                 body.replace('\\\\"', '\"').replace('\\"', '\'')
                 return JSON.parse(body)
             }
-            response.data.attributes.Body = parseEditorJsBody(response.data.attributes.Body)
-            console.log(`/api/${model}/${id}`)
-            console.log(response)
-            res.json(response)
+            parsedResponse.data.attributes.Body = parseEditorJsBody(response.data.attributes.Body)
+            console.log('\n\nurl: ' + `/api/${model}/${id}` + '---------------')
+            console.log(parsedResponse)
+            res.json(parsedResponse)
         },
         error => serverDataError(error, res)
     )
@@ -68,7 +76,11 @@ app.get('/data/:model/', function (req, res) {
     }
 
     hfmdCms.get(`/api/${model}?fields=${fields}`).then(
-        response => res.json(response),
+        response => {
+            console.log('\n\nurl: ' + `/api/${model}?fields=${fields}` + '---------------')
+            console.log(response)
+            return res.json(response)
+        },
         error => serverDataError(error, res)
     )
 })
@@ -76,30 +88,33 @@ app.get('/data/:model/', function (req, res) {
 Sk8erMike.globalSetup(
     (route, req, res) => {
         state.set('activeStyle', state.get('isMobile') ? style.mobileStyle : style.defaultStyle)
-    },
-    { activeStyle: 'activeStyle' }
+        state.set('allowedModels', allowedModels)
+    }, 
+    {
+        activeStyle: 'activeStyle',
+        allowedModels: 'allowedModels' 
+    }
 )
 
-app.get(routes.root, (req, res) => {
-    const homeHtml = new Home(allowedModels).html()
-    const headHtml = template.site.htmlHead({title: 'Home for my Dome', inject: Sk8erMike.req.injectVars(req)})
-    res.send(headHtml + homeHtml)
+app.get(routes.root, async (req) => {
+    const preload = req.Sk8erMike.preload
+    new Head('Home for my Dome', Sk8erMike.req.injectVars(req)).preload(preload).render()
+    new Home(allowedModels).preload(preload).render()
 })
 
-app.get(routes.modelIndex, async function (req, res) {
+app.get(routes.modelIndex, async (req) => {
     const modelName = req.params.model
-    const headHtml = template.site.htmlHead({title: modelName, inject: Sk8erMike.req.injectVars(req)});
-    const [bodyHtml] = await new ModelIndex(modelName).htmlPromise()
-    res.send(headHtml + bodyHtml)
+    const preload = req.Sk8erMike.preload
+    new Head(modelName, Sk8erMike.req.injectVars(req)).preload(preload).render()
+    new ModelIndex(modelName).preload(preload).render()
 })
 
-app.get(routes.modelDetails, async function (req, res) {
+app.get(routes.modelDetails, async (req) => {    
     const model = req.params.model
     const id = req.params.id
-    const [bodyHtml, component] = await new ModelDetail(model, id).htmlPromise()
-    const title = component.getTitle()
-    const headHtml = template.site.htmlHead({title: title, inject: Sk8erMike.req.injectVars(req)})
-    res.send(headHtml + bodyHtml)
+    const preload = req.Sk8erMike.preload
+    const [, component] = await new ModelDetail(model, id).preload(preload).render()
+    new Head(component.getTitle(), Sk8erMike.req.injectVars(req)).preload(preload).render()
 })
 
 app.listen(port, () => {

@@ -1,5 +1,6 @@
 import { Sk8erMike, Component }  from '../sk8ermike/index.js'
 import { site, editorJs } from '../template/index.js'
+import { $P } from '../smalle-extended/e.js'
 
 export default class ModelDetail extends Component {
     constructor (modelName, id) {
@@ -17,8 +18,6 @@ export default class ModelDetail extends Component {
         )
 
         this.stateToLocals({
-            isMobile: 'isMobile', // TODO: could have definable vars to wait for incluide (isMobile, activeStyle) these for all compoentnes
-            activeStyle: 'activeStyle',
             id: statePath + '.id',
             attributes: statePath + '.attributes'
         })
