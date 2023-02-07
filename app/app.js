@@ -6,6 +6,7 @@ import hfmdCms from './hfmd-cms.js'
 import { allowedModels, routes } from '../public/js/app-config.js'
 import { Sk8erMike, state } from '../public/js/sk8ermike/index.js'
 import { Head, Home, ModelIndex, ModelDetail } from '../public/js/component/index.js'
+import { app as clientApp } from '../public/js/app.js'
 import style from '../public/js/style.js'
 
 const app = Sk8erMike.config({routes}, express, jsdom) // TODO doc this. Just like using exspress: // const app = express(). Then can use skatermike or exspress routing!
@@ -22,10 +23,6 @@ app.use(express.static('public'))
 
 // AMAZING FONT REFERENCE:
 // https://xd.adobe.com/ideas/principles/web-design/best-modern-fonts-for-websites/
-
-const serverError = (error, res) => {
-    res.status(500).send(error.status + " " + error.message) //TODO user friendly errors
-}
 
 const serverDataError = (error, res) => {
     res.json({error: error})
@@ -89,33 +86,14 @@ Sk8erMike.globalSetup(
     (route, req, res) => {
         state.set('activeStyle', state.get('isMobile') ? style.mobileStyle : style.defaultStyle)
         state.set('allowedModels', allowedModels)
-    }, 
+    },
     {
         activeStyle: 'activeStyle',
         allowedModels: 'allowedModels' 
     }
 )
 
-app.get(routes.root, async (req) => {
-    const preload = req.Sk8erMike.preload
-    new Head('Home for my Dome', Sk8erMike.req.injectVars(req)).preload(preload).render()
-    new Home(allowedModels).preload(preload).render()
-})
-
-app.get(routes.modelIndex, async (req) => {
-    const modelName = req.params.model
-    const preload = req.Sk8erMike.preload
-    new Head(modelName, Sk8erMike.req.injectVars(req)).preload(preload).render()
-    new ModelIndex(modelName).preload(preload).render()
-})
-
-app.get(routes.modelDetails, async (req) => {    
-    const model = req.params.model
-    const id = req.params.id
-    const preload = req.Sk8erMike.preload
-    const [, component] = await new ModelDetail(model, id).preload(preload).render()
-    new Head(component.getTitle(), Sk8erMike.req.injectVars(req)).preload(preload).render()
-})
+app.sk8erMikeRoutes()
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)

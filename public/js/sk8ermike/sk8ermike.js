@@ -131,6 +131,13 @@ export default class Sk8erMike {
                 },
             };
             app = new Proxy(expressApp, exspressProxyHandler);
+
+            app.sk8erMikeRoutes = () => {
+                for (const route in Sk8erMike.app.appRouteCallbacks) {
+                    const callback = Sk8erMike.app.appRouteCallbacks[route]
+                    app.get(route, callback)
+                }
+            }
         }
         return app
     }
@@ -159,13 +166,22 @@ if (Sk8erMike.clientSide) {
 
     const app = {
         appRouteCallbacks: {},
+        triggerCallback: (callback, params, preload=false) => {
+            const req = {
+                params: params,
+                Sk8erMike: { preload: preload }
+            }
+            new Promise(async resolve => {
+                const previousPreload = Component.preload
+                Component.preload = preload //This might not be threadsafe. If things blow up weirdly, look here :D
+                await callback(req)
+                Component.preload = previousPreload
+                resolve()
+            })
+        },
         get: (pattern, callback) => {
             if (Sk8erMike.req.routePattern === pattern) {
-                const req = {
-                    params: Sk8erMike.req.params,
-                    Sk8erMike: { preload: false }
-                }
-                callback(req)
+                app.triggerCallback(callback, Sk8erMike.req.params)
             }
             app.appRouteCallbacks[pattern] = callback
         },
@@ -180,11 +196,9 @@ if (Sk8erMike.clientSide) {
                     }
                     const paramsUrl = origin + '/params' + pathname + hash
                     const response = Sk8erMike.http.get(paramsUrl)
-                    const req = {
-                        params: response.params,
-                        Sk8erMike: { preload: false }
-                    }
-                    app.appRouteCallbacks[response.routePattern](req)
+                    const callback = app.appRouteCallbacks[response.routePattern]
+                    app.triggerCallback(callback, response.params)
+
                     console.log('%c🛴 Fast naving!', 'padding: 5px; background:#cc85ff; color:#000000', pathname)
                 } catch (error) {
                     clientError(error)
@@ -214,11 +228,8 @@ if (Sk8erMike.clientSide) {
             if (isInternalUrl) {
                 const paramsUrl = origin + '/params' + pathname
                 const response = Sk8erMike.http.get(paramsUrl)
-                const req = {
-                    params: response.params,
-                    Sk8erMike: { preload: true }
-                }
-                app.appRouteCallbacks[response.routePattern](req)
+                const callback = app.appRouteCallbacks[response.routePattern]
+                app.triggerCallback(callback, response.params, true)
                 const element = document.querySelector('.' + uniqueClass)
                 console.log('%c🦴 Link preload: ' + pathname, 'padding: 5px; background:#85d2ff; color:#000000', {element})
             }
@@ -264,6 +275,10 @@ if (Sk8erMike.clientSide) {
 }
             
 if (Sk8erMike.serverSide) {
+    const serverError = (error, res) => {
+        console.warn('☄️ ' + error + ' ' + res.statusCode + ' ' + res.statusMessage) 
+    }
+
     serverInterface = {
         http: {
             get: () => { }, // No non-promise version of get server-side. 
@@ -308,13 +323,20 @@ if (Sk8erMike.serverSide) {
         
                     res.on('end', () => {
                         try {
-                            const parsedData = JSON.parse(rawData); //TODO this fials when there is an error and http is returned instead of json
+                            let parsedData
+                            try {
+                                parsedData = JSON.parse(rawData);
+                            } catch(error) {
+                                parsedData = rawData
+                            }
+
                             if (res.statusCode >= 200 && res.statusCode < 300) {
                                 resolve(parsedData)
                             } else {
-                                reject(parsedData.error)
+                                serverError(parsedData, res)
+                                reject(parsedData)
                             }
-                        } catch (error) {
+                        } catch(error) {
                             reject(error)
                         }
                     });
@@ -332,6 +354,18 @@ if (Sk8erMike.serverSide) {
             }
         },
         app: { 
+            appRouteCallbacks: {},
+            get: (pattern, callback) => {
+                if (Sk8erMike.req.routePattern === pattern) {
+                    const req = {
+                        params: Sk8erMike.req.params,
+                        Sk8erMike: { preload: false }
+                    }
+                    callback(req)
+                }
+                serverInterface.app.appRouteCallbacks[pattern] = callback
+            },
+            ready: () => {}, // Do nothing server side.
             visitWithPreload: (href, uniqueClass) => {} // Do nothing. We'll wait for the client to re-render this page.
             // TODO add server side visit with preload like global.hfmd.app.visitWithPreload(href, uniqueClass)
             // It will have to inject something into the headder to trigger preload after site loads.  
@@ -342,6 +376,6 @@ if (Sk8erMike.serverSide) {
 
 Sk8erMike.http = Sk8erMike.serverSide ? serverInterface.http : clientInterface.http
 Sk8erMike.req = Sk8erMike.serverSide ? serverInterface.req : clientInterface.req
-Sk8erMike.app = Sk8erMike.serverSide ? undefined : clientInterface.app
+Sk8erMike.app = Sk8erMike.serverSide ? serverInterface.app : clientInterface.app
 
 Sk8erMike.global[globalAppName] = Sk8erMike.app

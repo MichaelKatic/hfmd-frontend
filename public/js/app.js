@@ -17,24 +17,23 @@ Sk8erMike.globalSetup(
 )
 
 app.get(routes.root, async (req) => {
-    const preload = req.Sk8erMike.preload
-    new Head('Home for my Dome', Sk8erMike.req.injectVars(req)).preload(preload).render()
-    new Home(allowedModels).preload(preload).render()
+    new Head('Home for my Dome', Sk8erMike.req.injectVars(req)).render()
+    new Home(allowedModels).render()
 })
 
 app.get(routes.modelIndex, async (req) => {
     const modelName = req.params.model
-    const preload = req.Sk8erMike.preload
-    new Head(modelName, Sk8erMike.req.injectVars(req)).preload(preload).render()
-    new ModelIndex(modelName).preload(preload).render()
+    new Head(modelName, Sk8erMike.req.injectVars(req)).render()
+    new ModelIndex(modelName).render()
 })
 
-app.get(routes.modelDetails, async (req) => {    
+app.get(routes.modelDetails, async (req) => {
     const model = req.params.model
     const id = req.params.id
-    const preload = req.Sk8erMike.preload
-    const [, component] = await new ModelDetail(model, id).preload(preload).render()
-    new Head(component.getTitle(), Sk8erMike.req.injectVars(req)).preload(preload).render()
+    const [, component] = await new ModelDetail(model, id).render()
+    new Head(component.getTitle(), Sk8erMike.req.injectVars(req)).render()
 })
 
 app.ready()
+
+export { app }

@@ -37,7 +37,7 @@ export default class ModelDetail extends Component {
     }
 
     getTitle = () => {
-        return this.locals().attributes.Title
+        return !this.preload? this.locals().attributes.Title : ''
     }
 }
 

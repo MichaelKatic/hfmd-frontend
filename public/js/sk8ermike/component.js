@@ -196,9 +196,13 @@ export default class Component {
         Component.renderingCompleteCallbacks = [];
     }
     static globalStateToLocals = {}
+    static preload = false;
 
     constructor(baseArguments, disableLookup=false) {
         let extendedComponent = this.constructor.name !== Component.name
+
+        let result = this
+        let newComponent = true
 
         if (baseArguments !== undefined && !disableLookup) {
             // If called with arguments return existing componet with same arguments. 
@@ -208,15 +212,21 @@ export default class Component {
             })
             const existingComponent = Component.componentDictionarty[key]
             if (existingComponent !== undefined) {
-                return existingComponent
+                result = existingComponent
+                newComponent = false
             } else {
                 Component.componentDictionarty[key] = this
             }
         }
 
-        this.descriptor = this.constructor.name + (extendedComponent ? ` (${Component.name}})` : '')
+        if (newComponent)
+        {
+            this.descriptor = this.constructor.name + (extendedComponent ? ` (${Component.name}})` : '')
+        }
 
-        return this
+        result.preloadOnly = Component.preload
+
+        return result
     }
 
     rootNode(rootNodeSelector) {
@@ -250,13 +260,13 @@ export default class Component {
     }
 
     render(viewName = undefined) {
-        if (!this.preloadOnly) {
-            Component.rendering++
-        }
-
+        Component.rendering++
         return new Promise(resolve => {
-            if (!this.preloadOnly) {
-                const view = this.getView(viewName)
+            const view = this.getView(viewName)
+            if (this.preloadOnly) {
+                view.preload()
+                resolve([view.html, this])
+            } else {
                 view.enable()
                 view.htmlPromise().then((html) => {
                     const rootNode = this.getRootNode()
@@ -274,11 +284,12 @@ export default class Component {
                     }
 
                     resolve([html, this])
-                    Component.rendering--
-                    if (Component.rendering === 0) {
-                        Component.triggerRenderingCompleteCallback()
-                    }
                 })
+            }
+            
+            Component.rendering--
+            if (Component.rendering === 0) {
+                Component.triggerRenderingCompleteCallback()
             }
         })
     }
