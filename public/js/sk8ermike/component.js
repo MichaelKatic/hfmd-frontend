@@ -128,7 +128,14 @@ class View {
     onRenderPromise() {}
     onRender(render) {
         this.localsToHtml = (locals) => {
-            this.#html = render(locals)
+            let html = render(locals)
+            if (typeof html === 'object' && 'render' in html && typeof html.render === 'function')
+            {
+                //returned a smalle element or something else that needs rendering.
+                html = html.render()
+            }
+            this.#html = html
+            
             console.log(`%c🌵 HTML Rendered`, 'padding: 5px; background:#ef85ff; color:#000000', { view: this })
             this.onRenderPromise(this.#html)
             this.onRenderPromise = () => {} // Stop this from potentially calling resolve multiple times.
@@ -160,9 +167,29 @@ export default class Component {
 
     // enabled = false;
     rootNodeSelector = undefined
+    replaceOuterHTML = true
+    preserverRootId = true
+    preserveRootClasses = true
+    preserverRootAttribute = false
     descriptor = 'Component'
     preloadOnly = false;
-    getRootNode() { return typeof document !== 'undefined' ? document.querySelector(this.rootNodeSelector) : undefined }
+    getRootNode() { 
+        let result = undefined
+
+        if (typeof document !== 'undefined') {
+            result = document.querySelector(this.rootNodeSelector)
+
+            if (result === null) {
+                error => console.warn('%c☄️ error!', 'padding: 5px; background:#ff85cc; color:#000000', error)
+                console.warn(
+                    `%c🪐 Unable to find element using document.querySelector("${this.rootNodeSelector}")`,
+                    'padding: 5px; background:#ff85cc; color:#000000',
+                    document)
+            }
+        }
+
+        return result
+    }
     views = {}
     addView() {
         const newView = new View(...arguments)
@@ -221,7 +248,7 @@ export default class Component {
 
         if (newComponent)
         {
-            this.descriptor = this.constructor.name + (extendedComponent ? ` (${Component.name}})` : '')
+            this.descriptor = this.constructor.name + (extendedComponent ? ` (${Component.name})` : '')
         }
 
         result.preloadOnly = Component.preload
@@ -229,8 +256,14 @@ export default class Component {
         return result
     }
 
-    rootNode(rootNodeSelector) {
+    replaceTypes = {
+        innerHTML: 'innerHTML',
+        outerHTML: 'outerHTML'
+    }
+
+    rootNode(rootNodeSelector, replaceType = this.replaceTypes.innerHTML) {
         this.rootNodeSelector = rootNodeSelector
+        this.replaceType = replaceType
         return this
     }
 
@@ -263,23 +296,56 @@ export default class Component {
         Component.rendering++
         return new Promise(resolve => {
             const view = this.getView(viewName)
+            //Check if state has changes since last render. hmmmm, that wont work. Need to know any time any child element could have changed. How do we know if it's even still displaying, doens't matter if the state hasn't changed. 
             if (this.preloadOnly) {
                 view.preload()
                 resolve([view.html, this])
             } else {
                 view.enable()
-                view.htmlPromise().then((html) => {
+                view.htmlPromise().then(([html,]) => {
                     const rootNode = this.getRootNode()
                     if (html !== undefined) {
-                        rootNode.outerHTML = html
+                        if (rootNode.tagName === 'HEAD') { //rootNode.outerHTML = html with head will wipe out body. 
+                            rootNode.innerHTML = new DOMParser().parseFromString(html, "text/html").head.innerHTML
+                        } else if (rootNode.tagName === 'BODY') {
+                            rootNode.outerHTML = html
 
-                        // When replacing body an extra head is added so we have to remove it. 
-                        // https://stackoverflow.com/questions/52888347/setting-document-body-outerhtml-creates-empty-heads-why
-                        if (rootNode.tagName === 'BODY') {
-                            const emptyHead = document.querySelector('head:empty')
-                            if (emptyHead) {
-                                emptyHead.remove()
+                            // When replacing body an extra head is added so we have to remove it. 
+                            // https://stackoverflow.com/questions/52888347/setting-document-body-outerhtml-creates-empty-heads-why
+                            if (rootNode.tagName === 'BODY') {
+                                const emptyHead = document.querySelector('head:empty')
+                                if (emptyHead) {
+                                    emptyHead.remove()
+                                }
                             }
+                        } else if (this.replaceType === this.replaceTypes.innerHTML) {
+                            rootNode.innerHTML = html
+                        } else {
+                            // const retainRootPreserves = (newHtml) => {
+                            //     const oldElement = this.getRootNode()
+                            //     const newElement = new DOMParser().parseFromString(newHtml, "text/html").body.firstElementChild
+
+                            //     if (this.preserverRootId) {
+                            //         newElement.id = oldElement.id
+                            //     }
+
+                            //     if (this.preserveRootClasses) {
+                            //         if (oldElement.className != '' || newElement.className != '')
+                            //         {
+                            //             newElement.className = oldElement.className
+                            //         }
+                            //     }
+
+                            //     if (this.preserverRootAttribute) {
+                            //         newElement.attributes = oldElement.attributes
+                            //     }
+
+                            //     return newElement.outerHTML
+                            // }
+
+                            // html = retainRootPreserves(html)
+
+                            rootNode.outerHTML = html
                         }
                     }
 
@@ -291,6 +357,14 @@ export default class Component {
             if (Component.rendering === 0) {
                 Component.triggerRenderingCompleteCallback()
             }
+        })
+    }
+
+    //Returns component only after rendering complete
+    renderThenComponent(viewName = undefined) {
+        return new Promise(async resolve => {
+            const [, component] = await this.render(viewName)
+            resolve(component)
         })
     }
 

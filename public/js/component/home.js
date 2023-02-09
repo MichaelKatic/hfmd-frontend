@@ -5,12 +5,12 @@ export default class Home extends Component {
     constructor(allowedModels) {
         super(arguments)
         
-        this.rootNode('body')
+        this.rootNode('#main-content')
 
         this.onRender(() => {
-            const titleHtml = site.home({models: allowedModels})
-            const wrappedBodyHtml = site.wrapperBody({content: titleHtml})
-            return wrappedBodyHtml
+            return site.home({models: allowedModels})
         })
+
+        this.render()
     }
 }

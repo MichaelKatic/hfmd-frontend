@@ -1,6 +1,6 @@
 import { Sk8erMike, state } from './sk8ermike/index.js'
 import { allowedModels, routes } from './app-config.js'
-import { Head, Home, ModelIndex, ModelDetail } from './component/index.js'
+import { LayoutMain, Breadcrumb, Head, Home, ModelIndex, ModelDetail } from './component/index.js'
 import style from './style.js'
 
 const app = Sk8erMike.app
@@ -17,21 +17,30 @@ Sk8erMike.globalSetup(
 )
 
 app.get(routes.root, async (req) => {
-    new Head('Home for my Dome', Sk8erMike.req.injectVars(req)).render()
-    new Home(allowedModels).render()
+    new LayoutMain()
+    new Head('Home for my Dome')
+    new Breadcrumb('Home for my Dome', null, Breadcrumb.view.home)
+    new Home(allowedModels)
 })
 
 app.get(routes.modelIndex, async (req) => {
-    const modelName = req.params.model
-    new Head(modelName, Sk8erMike.req.injectVars(req)).render()
-    new ModelIndex(modelName).render()
+    const model = req.params.model
+
+    new LayoutMain()
+    new Head(model)
+    new Breadcrumb(model, model, Breadcrumb.view.modelIndex)
+    new ModelIndex(model)
 })
 
 app.get(routes.modelDetails, async (req) => {
     const model = req.params.model
     const id = req.params.id
-    const [, component] = await new ModelDetail(model, id).render()
-    new Head(component.getTitle(), Sk8erMike.req.injectVars(req)).render()
+    
+    new LayoutMain()
+    const component = await new ModelDetail(model, id)
+    const title = component.getTitle()
+    new Head(title)
+    new Breadcrumb(title, model, Breadcrumb.view.modelDetail)
 })
 
 app.ready()

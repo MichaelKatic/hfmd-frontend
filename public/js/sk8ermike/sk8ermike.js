@@ -70,7 +70,9 @@ export default class Sk8erMike {
                 const dom = new jsdom.JSDOM(`<!DOCTYPE html>`)
                 const document = dom.window.document
                 document.location.href = href 
+                const DOMParser = dom.window.DOMParser
                 Sk8erMike.global.document = document
+                Sk8erMike.global.DOMParser = DOMParser
             }
 
             const globalSk8erMikeSetup = (route, req, res) => {
@@ -103,7 +105,7 @@ export default class Sk8erMike {
                             const autoResolve = arguments[2] !== undefined ? arguments[2] : true
                             if (routeLookup[route] !== undefined) {
                                 const wrappedCallback = async function (req, res) {
-
+                                    
                                     serverDomSetup('http://localhost/' + req.url)
                                     globalSk8erMikeSetup(route, req, res)
                                     Sk8erMike.globalCustomSetup(route, req, res)
@@ -114,6 +116,7 @@ export default class Sk8erMike {
 
                                     if (autoResolve) {
                                         Component.setRenderingCompleteCallbacks(()=>{
+                                            Sk8erMike.req.injectVars(req)
                                             res.send(document.documentElement.innerHTML)
                                         })
                                     }
@@ -346,11 +349,22 @@ if (Sk8erMike.serverSide) {
             })
         },
         req: {
-            injectVars: (req, serverRendered=false) => {
-                return `
-                    if (typeof(window.${globalDataName}) === 'undefined') { window.${globalDataName} = {} } 
-                    window.${globalDataName}.routePattern = '${req.route.path}'
-                    window.${globalDataName}.params = ${JSON.stringify(req.params)}`
+            injectVars: (req) => {
+                const injectionScriptId = 'sk8erMikeScript'
+                const alreadyInjected = document.head.querySelector(`#${injectionScriptId}`) !== null
+                if (!alreadyInjected) {
+                    const headerElements = `
+                        <script id="${injectionScriptId}" type="application/javascript">
+                            if (typeof(window.${globalDataName}) === 'undefined') { window.${globalDataName} = {} };
+                            window.${globalDataName}.routePattern = '${req.route.path}';
+                            window.${globalDataName}.params = ${JSON.stringify(req.params)};
+                        </script>`
+
+                    const newHeaderElements = new DOMParser().parseFromString(headerElements.replace(/\s\s+/g, ' '), "text/html").head.childNodes
+                    for (const element of newHeaderElements) {
+                        document.head.appendChild(element)
+                    }
+                }
             }
         },
         app: { 

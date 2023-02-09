@@ -6,7 +6,7 @@ import hfmdCms from './hfmd-cms.js'
 import { allowedModels, routes } from '../public/js/app-config.js'
 import { Sk8erMike, state } from '../public/js/sk8ermike/index.js'
 import { Head, Home, ModelIndex, ModelDetail } from '../public/js/component/index.js'
-import { app as clientApp } from '../public/js/app.js'
+import '../public/js/app.js'
 import style from '../public/js/style.js'
 
 const app = Sk8erMike.config({routes}, express, jsdom) // TODO doc this. Just like using exspress: // const app = express(). Then can use skatermike or exspress routing!

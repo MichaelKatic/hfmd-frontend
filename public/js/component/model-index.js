@@ -9,7 +9,7 @@ export default class ModelIndex extends Component {
         const requestPath = `/data/${modelName}?fields=${fields}`
         const statePath = `cms.api.${modelName}.index`
 
-        this.rootNode('body')
+        this.rootNode('#main-content')
 
         this.promiseToState(
             () => Sk8erMike.http.getPromise(requestPath),
@@ -22,11 +22,9 @@ export default class ModelIndex extends Component {
         })
         
         this.onRender(({index}) => {
-            const titleHtml = site.title({title: modelName})
-            const modelIndexHtml = site.modelIndex({model: modelName, data: index})
-            const wrappedBodyHtml = site.wrapperBody({content: titleHtml + modelIndexHtml})
-
-            return wrappedBodyHtml
+            return site.modelIndex({model: modelName, data: index})
         })
+
+        this.render()
     }
 }

@@ -9,7 +9,7 @@ export default class ModelDetail extends Component {
         const statePath = `cms.api.${modelName}.${id}`
         const requestPath = `/data/${modelName}/${id}`
 
-        this.rootNode('body')
+        this.rootNode('#main-content')
 
         this.promiseToState(
             () => Sk8erMike.http.getPromise(requestPath),
@@ -23,21 +23,14 @@ export default class ModelDetail extends Component {
         })
         
         this.onRender(({id, attributes}) => {
-            const titleHtml = site.breadcrumb({
-                id: id,
-                title: attributes.Title,
-                model: modelName
-            })
-            const editorJsBody = attributes.Body
-            const bodyHtml = renderEditorJs(editorJsBody.blocks)
-            const wrappedBodyHtml = site.wrapperBody({content: titleHtml + bodyHtml})
-
-            return wrappedBodyHtml
+            return renderEditorJs(attributes.Body.blocks)
         })
+
+        return this.renderThenComponent()
     }
 
     getTitle = () => {
-        return !this.preload? this.locals().attributes.Title : ''
+        return Component.preload ? '' : this.locals().attributes.Title
     }
 }
 
