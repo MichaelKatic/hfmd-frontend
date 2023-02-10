@@ -209,17 +209,17 @@ export default class Component {
     static componentDictionarty = {}
     static rendering = 0
     static renderingCompleteCallbacks = []
-    static setRenderingCompleteCallbacks(value) {
+    static addRenderingCompleteCallback(callback) {
         if (Component.rendering === 0) {
-            value()
+            callback()
         } else { 
-            Component.renderingCompleteCallbacks.push(value)
+            Component.renderingCompleteCallbacks.push(callback)
         }
     }
     static triggerRenderingCompleteCallback() {
         for (const callback of Component.renderingCompleteCallbacks) {
             callback()
-        } 
+        }
         Component.renderingCompleteCallbacks = [];
     }
     static globalStateToLocals = {}

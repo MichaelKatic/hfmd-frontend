@@ -115,7 +115,7 @@ export default class Sk8erMike {
                                     const callbackResult = await callback(req, res)
 
                                     if (autoResolve) {
-                                        Component.setRenderingCompleteCallbacks(()=>{
+                                        Component.addRenderingCompleteCallback(()=>{
                                             Sk8erMike.req.injectVars(req)
                                             res.send(document.documentElement.innerHTML)
                                         })
@@ -178,6 +178,7 @@ if (Sk8erMike.clientSide) {
                 const previousPreload = Component.preload
                 Component.preload = preload //This might not be threadsafe. If things blow up weirdly, look here :D
                 await callback(req)
+                Component.addRenderingCompleteCallback(() => app.ready())
                 Component.preload = previousPreload
                 resolve()
             })
@@ -244,7 +245,7 @@ if (Sk8erMike.clientSide) {
                 } else {
                     app.preloadQueue.push(() => app.preload(url, uniqueClass))
                 }
-            }, 0)
+            }, 0) 
             
             return `${Sk8erMike.globalName}.${globalAppName}.visit('${url}')`
         }
@@ -292,8 +293,7 @@ if (Sk8erMike.serverSide) {
                 let protocol = https
         
                 if (url[0] === '/') {
-                    url = 'http://localhost:3000' + url //todo set as env var
-                    // protocol = http
+                    url = 'http://localhost:3000' + url
                 }
 
                 if (url.startsWith('http://localhost')) {
@@ -303,7 +303,6 @@ if (Sk8erMike.serverSide) {
                 const options = {
                     headers: {
                         accept: 'application/json',
-                        // Authorization: `Bearer ${apiGetToken}`
                     }
                 }
                 protocol.get(url, options, (res) => {

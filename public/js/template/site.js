@@ -54,6 +54,5 @@ export default {
     wrapperBody,
     modelIndex,
     logo,
-    breadcrumb,
-    title
+    breadcrumb
 }

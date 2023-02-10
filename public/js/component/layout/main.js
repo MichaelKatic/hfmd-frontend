@@ -20,6 +20,8 @@ export default class LayoutMain extends Component {
             )
         })
 
-        this.render()
+        if (Sk8erMike.serverSide) {
+            this.render()
+        }
     }
 }
