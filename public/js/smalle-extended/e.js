@@ -1,6 +1,8 @@
 import { Element, elementProxy, $A, $Body, $Div, $H, $H1, $H2, $H3, $H4, $H5, $H6, $Head, $Hr, $Iframe, $Img, $Input, $Label, $Li, $Link, $P, $Pre, $Script, $Style, $Table, $Td, $Title, $Tr } from '../smalle/e.js'
 import { Sk8erMike } from '../sk8ermike/index.js'
 
+const randomString = () => Math.random().toString(36).replace('0.', '');
+
 class Paragraph extends Element {
     constructor(...args) {
         return super('p', ...args)
@@ -51,7 +53,6 @@ class Anchor extends Element {
                 this.attributes.href = '#'
             } else if (hasLocalLink) {
                 // if href is a url targeted at this tab, use optimized local app routing
-                const randomString = () => Math.random().toString(36).replace('0.', '');
                 const uniqueClass = 'anchor_' + randomString();
                 this.attributes.class = (this.attributes.class || '') + ' ' + uniqueClass
                 this.attributes.href = 'javascript:;'

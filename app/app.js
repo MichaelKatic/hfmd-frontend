@@ -5,24 +5,16 @@ import '../public/js/lodash/core.js'
 import hfmdCms from './hfmd-cms.js'
 import { allowedModels, routes } from '../public/js/app-config.js'
 import { Sk8erMike, state } from '../public/js/sk8ermike/index.js'
-import { Head, Home, ModelIndex, ModelDetail } from '../public/js/component/index.js'
 import '../public/js/app.js'
 import style from '../public/js/style.js'
+import {inspect} from 'util'
 
 const app = Sk8erMike.config({routes}, express, jsdom) // TODO doc this. Just like using exspress: // const app = express(). Then can use skatermike or exspress routing!
 
 const port = 3000
 
 app.use(express.static('public'))
-
-// Cool image styling
-// https://www.w3schools.com/css/css3_images.asp
-
-// Responsive website layouts:
-// https://www.w3schools.com/css/tryit.asp?filename=trycss3_flexbox_website2
-
-// AMAZING FONT REFERENCE:
-// https://xd.adobe.com/ideas/principles/web-design/best-modern-fonts-for-websites/
+app.use('/favicon.ico', express.static('public/favicon/coffee-16.ico'));
 
 const serverDataError = (error, res) => {
     res.json({error: error})
@@ -65,7 +57,7 @@ app.get('/data/:model/:id', function (req, res) {
 app.get('/data/:model/', function (req, res) {
     const model = req.params.model
     const fields = req.query.fields
-
+    
     if (!allowedModels.includes(model))
     {
         res.status(401).send("Unauthorized")
@@ -93,10 +85,26 @@ Sk8erMike.globalSetup(
     }
 )
 
-app.sk8erMikeRoutes()
+Sk8erMike.app.routes(app)
+
+app.get('*', (req, res) => {
+    //should never happen
+    console.log('Route non-existant')
+    console.log('req: ' + JSON.stringify(inspect({
+        route: routes.root,
+        url: req.url,
+        params: req.params,
+    })))
+
+    res.json({
+        error: 'Route non-existant',
+        url: req.url,
+        req: inspect(req)
+    })
+});
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
 
-export default app
+export default app.expressApp

@@ -14,6 +14,8 @@ export default class Sk8erMike {
     static get instance() { return Sk8erMike.global[globalName] } 
     static set instance(value) { Sk8erMike.global[globalName] = value }
 
+    static expressProxyApp = {}
+
     constructor() {
         if (!this.instance) {
             this.instance = this
@@ -100,6 +102,9 @@ export default class Sk8erMike {
                 get(target, prop, receiver) {
                     if (prop === 'get') {
                         const getWrapper = function() {
+                            if (arguments.length < 2) {
+                                return target[prop](...arguments) 
+                            }
                             const route = arguments[0]
                             const callback = arguments[1]
                             const autoResolve = arguments[2] !== undefined ? arguments[2] : true
@@ -125,7 +130,7 @@ export default class Sk8erMike {
                                 }
                                 return target[prop](route, wrappedCallback)
                             } else {
-                                return target[prop](route, callback)
+                                return target[prop](...arguments)
                             }
                         }
                         return getWrapper
@@ -134,13 +139,7 @@ export default class Sk8erMike {
                 },
             };
             app = new Proxy(expressApp, exspressProxyHandler);
-
-            app.sk8erMikeRoutes = () => {
-                for (const route in Sk8erMike.app.appRouteCallbacks) {
-                    const callback = Sk8erMike.app.appRouteCallbacks[route]
-                    app.get(route, callback)
-                }
-            }
+            app.expressApp = expressApp;
         }
         return app
     }
@@ -283,6 +282,31 @@ if (Sk8erMike.serverSide) {
         console.warn('☄️ ' + error + ' ' + res.statusCode + ' ' + res.statusMessage) 
     }
 
+    const app = { 
+        appRouteCallbacks: {},
+        routes: (exspresProxyApp) => {
+            for (const route in app.appRouteCallbacks) {
+                const callback = app.appRouteCallbacks[route]
+                exspresProxyApp.get(route, callback)
+            }
+        },
+        get: (pattern, callback) => {
+            if (Sk8erMike.req.routePattern === pattern) {
+                const req = {
+                    params: Sk8erMike.req.params,
+                    Sk8erMike: { preload: false }
+                }
+                callback(req)
+            }
+            app.appRouteCallbacks[pattern] = callback
+        },
+        ready: () => {}, // Do nothing server side.
+        visitWithPreload: (href, uniqueClass) => {} // Do nothing. We'll wait for the client to re-render this page.
+        // TODO add server side visit with preload like global.hfmd.app.visitWithPreload(href, uniqueClass)
+        // It will have to inject something into the headder to trigger preload after site loads.  
+        // Then stop the client from doing the redundent render.
+    }
+
     serverInterface = {
         http: {
             get: () => { }, // No non-promise version of get server-side. 
@@ -366,24 +390,7 @@ if (Sk8erMike.serverSide) {
                 }
             }
         },
-        app: { 
-            appRouteCallbacks: {},
-            get: (pattern, callback) => {
-                if (Sk8erMike.req.routePattern === pattern) {
-                    const req = {
-                        params: Sk8erMike.req.params,
-                        Sk8erMike: { preload: false }
-                    }
-                    callback(req)
-                }
-                serverInterface.app.appRouteCallbacks[pattern] = callback
-            },
-            ready: () => {}, // Do nothing server side.
-            visitWithPreload: (href, uniqueClass) => {} // Do nothing. We'll wait for the client to re-render this page.
-            // TODO add server side visit with preload like global.hfmd.app.visitWithPreload(href, uniqueClass)
-            // It will have to inject something into the headder to trigger preload after site loads.  
-            // Then stop the client from doing the redundent render.
-        }
+        app
     }
 }
 

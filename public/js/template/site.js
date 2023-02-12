@@ -20,7 +20,7 @@ const home = ({models}) =>
                 $A(model).href('./' + model).target('_self')
             )
         ).style(state.activeStyle.h1),
-        $Iframe.src('https://skatermike.playcode.io/').style({width: '100%', height: '500px'})
+        // $Iframe.src('https://skatermike.playcode.io/').style({width: '100%', height: '500px'})
     ]).render()
 
 const wrapperBody = ({content}) => $Div(content).style(state.activeStyle.wrapper).render()

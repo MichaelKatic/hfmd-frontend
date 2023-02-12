@@ -1,5 +1,5 @@
-const serverless = require("serverless-http");
-const app = require("app/app");
+import serverless from "serverless-http";
+import app from "./app/app.js";
 
 const binaryMimeTypes = [
   "application/javascript",
@@ -23,6 +23,6 @@ const binaryMimeTypes = [
   "font/otf",
 ];
 
-module.exports.handler = serverless(app, {
+export const handler = serverless(app, {
   binary: binaryMimeTypes,
 });

@@ -25,7 +25,7 @@ app.get(routes.root, async (req) => {
 
 app.get(routes.modelIndex, async (req) => {
     const model = req.params.model
-    
+
     new LayoutMain()
     new Head(model)
     new Breadcrumb(model, model, Breadcrumb.view.modelIndex)
