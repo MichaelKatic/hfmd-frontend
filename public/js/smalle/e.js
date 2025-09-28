@@ -192,7 +192,7 @@ class Element {
     //BIG NOTE BOI - TODO
     // We can make all individual components subscribe to the parts of the state they use.
     // STEPS 
-    // 1. make all state heirarchy proxies. 
+    // 1. make all state hierarchy proxies.
     // 2. On render call, we can check content and all attributes. 
     // 3. Any that have proxy property 'sub' or whatever
     // 4. We create a subscription to call render again later.

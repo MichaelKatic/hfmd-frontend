@@ -39,7 +39,7 @@
         },
 
         //TODO move these to Readme#Helpful commands. 
-        //sam logs -n HelloWorldFunction — stack-name <stack_app> — tail
+        //sam logs --tail -n HfmdAiFunction --stack-name hfmd-ai-sam-app
 
         // [*] Validate SAM template: sam validate
         // [*] Invoke Function: sam local invoke

@@ -164,7 +164,6 @@ class View {
 }
 
 export default class Component {
-
     // enabled = false;
     rootNodeSelector = undefined
     replaceOuterHTML = true

@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   app
-  Sample SAM Template for app
+  Main frontend for blogs or whatever WE decide to publish
   
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -10,7 +10,7 @@ Globals:
     Timeout: 3
 
 Resources:
-  HelloWorldFunction:
+  HfmdFrontendFunction:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
@@ -34,11 +34,11 @@ Outputs:
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   SimpleAppApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+    Description: "API Gateway endpoint URL for Prod stage for HfmdFrontendFunction function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/HfmdFrontendFunction/"
+  HfmdFrontendFunction:
+    Description: "HfmdFrontendFunction Lambda Function ARN"
+    Value: !GetAtt HfmdFrontendFunction.Arn
+  HfmdFrontendFunctionIamRole:
+    Description: "Implicit IAM Role created for HfmdFrontendFunction"
+    Value: !GetAtt HfmdFrontendFunctionRole.Arn

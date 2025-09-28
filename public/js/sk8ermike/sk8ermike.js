@@ -98,7 +98,7 @@ export default class Sk8erMike {
                 return acc
             }, {})
             
-            const exspressProxyHandler = {
+            const expressProxyHandler = {
                 get(target, prop, receiver) {
                     if (prop === 'get') {
                         const getWrapper = function() {
@@ -138,7 +138,7 @@ export default class Sk8erMike {
                     return target[prop]
                 },
             };
-            app = new Proxy(expressApp, exspressProxyHandler);
+            app = new Proxy(expressApp, expressProxyHandler);
             app.expressApp = expressApp;
         }
         return app

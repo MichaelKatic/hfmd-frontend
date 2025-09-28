@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node app/app.js",
     "test": "mocha",
-    "start": "node app/app.js"
+    "build": "sam build",
+    "start-sam-build": "sam local start-api --env-vars \"env/sam.env.json\"",
+    "deploy-aws-sam": "sam deploy"
   },
   "author": "",
   "license": "ISC",

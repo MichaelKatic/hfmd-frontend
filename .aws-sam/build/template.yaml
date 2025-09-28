@@ -1,13 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 'app Sample SAM Template for app
+Description: 'app Main frontend for blogs or whatever WE decide to publish
 
   '
 Globals:
   Function:
     Timeout: 3
 Resources:
-  HelloWorldFunction:
+  HfmdFrontendFunction:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
@@ -21,26 +21,27 @@ Resources:
           Properties:
             Path: /{proxy+}
             Method: any
-      ImageUri: helloworldfunction:nodejs14.x-v1
+      ImageUri: hfmdfrontendfunction:nodejs14.x-v1
     Metadata:
       DockerContext: C:\Stuff\Workspace\hfmd-frontend
       DockerTag: nodejs14.x-v1
       Dockerfile: Dockerfile
-      SamResourceId: HelloWorldFunction
+      SamResourceId: HfmdFrontendFunction
 Outputs:
   SimpleAppApi:
-    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Description: API Gateway endpoint URL for Prod stage for HfmdFrontendFunction
+      function
     Value:
-      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
-  HelloWorldFunction:
-    Description: Hello World Lambda Function ARN
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/HfmdFrontendFunction/
+  HfmdFrontendFunction:
+    Description: HfmdFrontendFunction Lambda Function ARN
     Value:
       Fn::GetAtt:
-      - HelloWorldFunction
+      - HfmdFrontendFunction
       - Arn
-  HelloWorldFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
+  HfmdFrontendFunctionIamRole:
+    Description: Implicit IAM Role created for HfmdFrontendFunction
     Value:
       Fn::GetAtt:
-      - HelloWorldFunctionRole
+      - HfmdFrontendFunctionRole
       - Arn
